@@ -99,4 +99,5 @@ See instructions. Delete this line and place instructions to download, configure
 
 ## Task boards
 - Sprint 1 Board: https://github.com/orgs/swe-students-fall2025/projects/7/views/1
+- Sprint 2 Board:
 
