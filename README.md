@@ -4,8 +4,7 @@ A little exercise to build a web application following an agile development proc
 
 ## Product vision statement
 
-Empower students to plan and track spending on mobile quickly and clearly by showing **planned vs. actual** amounts per category, so they can make smarter day-to-day money decisions.
-
+Our app empowers users to plan and track spending on mobile quickly and clearly by showing **planned vs. actual** amounts per category, so they can make smarter day-to-day money decisions.
 
 ## User stories
 
@@ -98,6 +97,6 @@ Empower students to plan and track spending on mobile quickly and clearly by sho
 See instructions. Delete this line and place instructions to download, configure, and run the software here.
 
 ## Task boards
-- Sprint 1 Board: https://github.com/orgs/swe-students-fall2025/projects/7/views/1
-- Sprint 2 Board:
 
+- [Sprint 1 Board](https://github.com/orgs/swe-students-fall2025/projects/7/views/1)
+- [Sprint 2 Board](https://github.com/orgs/swe-students-fall2025/projects/20/views/1)
