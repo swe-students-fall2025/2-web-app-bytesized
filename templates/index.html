@@ -2,7 +2,7 @@
 
 {% block container %}
 
-    <h2>Welcome to Your Spending Tracker!</h2>
+    <h2>Welcome to Your Budget Tracker!</h2>
     <p>Empower students to plan and track spending on mobile quickly and clearly.</p>
 
     <!-- Search Form -->
@@ -18,47 +18,9 @@
     </div>
 
     <!-- Add New Plan Form -->
-    <div>
-        <h3>Add New Budget Plan</h3>
-        <form method="POST" action="{{ url_for('create_plan') }}">
-            <div>
-                <label>Planned Expense ($):</label>
-                <input type="number" name="planned_expense" step="0.01" min="0" required />
-            </div>
-            
-            <div>
-                <label>Actual Expense ($):</label>
-                <input type="number" name="actual_expense" step="0.01" min="0" value="0" />
-            </div>
-            
-            <div>
-                <label>Day:</label>
-                <input type="number" name="day" min="1" max="31" required />
-            </div>
-            
-            <div>
-                <label>Month:</label>
-                <input type="number" name="month" min="1" max="12" required />
-            </div>
-            
-            <div>
-                <label>Year:</label>
-                <input type="number" name="year" min="2020" max="2030" required value="2023" />
-            </div>
-            
-            <div>
-                <label>Category:</label>
-                <input type="text" name="category" placeholder="e.g., Food, Rent" required />
-            </div>
-            
-            <div>
-                <label>Notes:</label>
-                <textarea name="notes" placeholder="Additional notes..."></textarea>
-            </div>
-            
-            <input type="submit" value="Add Plan" />
-        </form>
-    </div>
+    <article class="plan new-plan">
+        {% include 'new_plan_form.html' %}
+    </article>
 
     <!-- Display Existing Plans -->
     <div>
@@ -69,24 +31,33 @@
                 <a href="{{ url_for('edit', plan_id=plan._id)}}">Edit</a> | 
                 <a href="{{ url_for('delete', plan_id=plan._id)}}">Delete</a>
             </div>
-            
-            <h4>{{ plan.category }} - {{ plan.day }}/{{ plan.month }}/{{ plan.year }}</h4>
-            
+    
+            <!-- title  -->
+            <h4>{{ plan.title }} - {{ plan.category }}</h4>
+    
+            <!-- date -->
+            <p><strong>Date:</strong> 
+                {% if plan.day and plan.month and plan.year %}
+                    {{ plan.day }}/{{ plan.month }}/{{ plan.year }}
+                {% else %}
+                    Not specified
+                {% endif %}
+            </p>
+    
             <div>
                 <strong>Planned:</strong> ${{ "%.2f"|format(plan.planned_expense) }} |
                 <strong>Actual:</strong> ${{ "%.2f"|format(plan.actual_expense) }} |
                 <strong>Difference:</strong> ${{ "%.2f"|format(plan.planned_expense - plan.actual_expense) }}
             </div>
-            
+    
             {% if plan.notes %}
             <p><strong>Notes:</strong> {{ plan.notes }}</p>
             {% endif %}
-            
+    
             <p><small>Created: {{ plan.created_at.strftime("%H:%M on %d %B %Y") }}</small></p>
         </div>
-        {% else %}
-        <p>No budget plans yet. Add your first plan above!</p>
         {% endfor %}
+    
     </div>
 
 {% endblock %}

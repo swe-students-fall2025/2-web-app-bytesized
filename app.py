@@ -48,20 +48,25 @@ def create_app():
         Returns:
             redirect (Response): A redirect response to the home page.
         """
-        planned_expense = float(request.form["planned_expense"])
-        actual_expense = float(request.form.get("actual_expense", 0))
-        day = int(request.form["day"])
-        month = int(request.form["month"])
-        year = int(request.form["year"])
-        category = request.form["category"]
+        title = request.form["title"]  
+        planned_expense = float(request.form["planned_expense"])  
+    
+        actual_expense_str = request.form.get("actual_expense", "").strip()
+        actual_expense = float(actual_expense_str) if actual_expense_str else 0.0
+
+        day = request.form.get("day")
+        month = request.form.get("month")
+        year = request.form.get("year")
+        category = request.form.get("category", "")
         notes = request.form.get("notes", "")
 
         doc = {
+            "title": title,  
             "planned_expense": planned_expense,
             "actual_expense": actual_expense,
-            "day": day,
-            "month": month,
-            "year": year,
+            "day": int(day) if day else None,  
+            "month": int(month) if month else None,
+            "year": int(year) if year else None,
             "category": category,
             "notes": notes,
             "created_at": datetime.datetime.utcnow(),
@@ -93,20 +98,25 @@ def create_app():
         Returns:
             redirect (Response): A redirect response to the home page.
         """
+        title = request.form["title"]
         planned_expense = float(request.form["planned_expense"])
-        actual_expense = float(request.form.get("actual_expense", 0))
-        day = int(request.form["day"])
-        month = int(request.form["month"])
-        year = int(request.form["year"])
-        category = request.form["category"]
+
+        actual_expense_str = request.form.get("actual_expense", "").strip()
+        actual_expense = float(actual_expense_str) if actual_expense_str else 0.0
+
+        day = request.form.get("day")
+        month = request.form.get("month")
+        year = request.form.get("year")
+        category = request.form.get("category", "")
         notes = request.form.get("notes", "")
 
         doc = {
+            "title": title,
             "planned_expense": planned_expense,
             "actual_expense": actual_expense,
-            "day": day,
-            "month": month,
-            "year": year,
+            "day": int(day) if day else None,
+            "month": int(month) if month else None,
+            "year": int(year) if year else None,
             "category": category,
             "notes": notes,
             "created_at": datetime.datetime.utcnow(),
