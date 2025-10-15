@@ -22,7 +22,7 @@ If you already have the container, click `start` in docker desktop
 
 **Third,** build a virtue image
 
-`docker build -t spending-app . `
+`docker build -t your-image-name . `
 
 ### 2. Clone this app to your computer
 
@@ -39,9 +39,9 @@ If you already have the container, click `start` in docker desktop
 
 * It can connect to a database. However, we do not have a database yet
 
-* Without a database, `docker run -ti --rm -d -p 5001:5000 -e MONGO_URI="mongodb://admin:secret@host.docker.internal:27017/" spending-test`
+* Without a database, `docker run -ti --rm -d -p 5001:5000 -e MONGO_URI="mongodb://admin:secret@host.docker.internal:27017/" your-image-name`
 
-* With a database, `docker run -ti --rm -d -p 5001:5000 -e MONGO_DBNAME=your_db_name -e MONGO_URI="mongodb://admin:secret@host.docker.internal:27017/" spending-test`
+* With a database, `docker run -ti --rm -d -p 5001:5000 -e MONGO_DBNAME=your_db_name -e MONGO_URI="mongodb://admin:secret@host.docker.internal:27017/" your-image-name`
 
 * open a web browser and go to `http://localhost:5001`
 
@@ -51,7 +51,7 @@ If you already have the container, click `start` in docker desktop
 
 * Recommended for use while developing
 
-* Run command, `docker run -ti --rm -d -p 5001:5000 -e MONGO_URI="mongodb://admin:secret@host.docker.internal:27017/" -v $(pwd):/app spending-test`
+* Run command, `docker run -ti --rm -d -p 5001:5000 -e MONGO_URI="mongodb://admin:secret@host.docker.internal:27017/" -v $(pwd):/app your-image-name`
 
 * open a web browser and go to `http://localhost:5001`
 
