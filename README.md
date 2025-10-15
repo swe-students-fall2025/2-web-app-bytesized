@@ -7,6 +7,7 @@ A little exercise to build a web application following an agile development proc
 Our app empowers users to plan and track spending on mobile quickly and clearly by showing **planned vs. actual** amounts per category, so they can make smarter day-to-day money decisions.
 
 ## User stories
+- [Full Project Backlog (Issues)](https://github.com/nyu-software-engineering/flask-pymongo-web-app-example.git)
 
 1. **View planned spending**
    - As a user, I want to see my **planned spending list** so that I can review my budget.
