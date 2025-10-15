@@ -2,13 +2,62 @@
 
 {% block container %}
 
-    <div class="welcome-section">
-        <h2>Welcome to Your Spending Tracker !</h2>
-        <p class="Product vision statement">
-            Empower students to plan and track spending on mobile quickly and clearly by showing planned vs. actual amounts per category, so they can make smarter day-to-day money decisions.
-        </p>
-        
-        
+    <h2>Welcome to Your Budget Tracker!</h2>
+    <p>Empower students to plan and track spending on mobile quickly and clearly.</p>
+
+    <!-- Search Form -->
+    <div>
+        <form method="GET" action="{{ url_for('search') }}">
+            <input type="text" name="category" placeholder="Search by category..." 
+                   value="{{ search_category if search_category else '' }}">
+            <input type="submit" value="Search">
+            {% if search_category %}
+                <a href="{{ url_for('home') }}">Clear Search</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Add New Plan Form -->
+    <article class="plan new-plan">
+        {% include 'new_plan_form.html' %}
+    </article>
+
+    <!-- Display Existing Plans -->
+    <div>
+        <h3>Your Budget Plans</h3>
+        {% for plan in plans %}
+        <div style="border: 1px solid #ccc; padding: 10px; margin: 10px 0;">
+            <div>
+                <a href="{{ url_for('edit', plan_id=plan._id)}}">Edit</a> | 
+                <a href="{{ url_for('delete', plan_id=plan._id)}}">Delete</a>
+            </div>
+    
+            <!-- title  -->
+            <h4>{{ plan.title }} - {{ plan.category }}</h4>
+    
+            <!-- date -->
+            <p><strong>Date:</strong> 
+                {% if plan.day and plan.month and plan.year %}
+                    {{ plan.day }}/{{ plan.month }}/{{ plan.year }}
+                {% else %}
+                    Not specified
+                {% endif %}
+            </p>
+    
+            <div>
+                <strong>Planned:</strong> ${{ "%.2f"|format(plan.planned_expense) }} |
+                <strong>Actual:</strong> ${{ "%.2f"|format(plan.actual_expense) }} |
+                <strong>Difference:</strong> ${{ "%.2f"|format(plan.planned_expense - plan.actual_expense) }}
+            </div>
+    
+            {% if plan.notes %}
+            <p><strong>Notes:</strong> {{ plan.notes }}</p>
+            {% endif %}
+    
+            <p><small>Created: {{ plan.created_at.strftime("%H:%M on %d %B %Y") }}</small></p>
+        </div>
+        {% endfor %}
+    
     </div>
 
 {% endblock %}

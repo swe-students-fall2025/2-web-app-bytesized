@@ -37,10 +37,123 @@ def create_app():
         Returns:
             rendered template (str): The rendered HTML template.
         """
+        plans = db.plans.find({}).sort("created_at", -1)
+        return render_template("index.html", plans=plans)
 
-        docs = []
-        return render_template("index.html", docs=docs)
+    @app.route("/create", methods=["POST"])
+    def create_plan():
+        """
+        Route for POST requests to the create page.
+        Accepts the form submission data for a new plan and saves the document to the database.
+        Returns:
+            redirect (Response): A redirect response to the home page.
+        """
+        title = request.form["title"]  
+        planned_expense = float(request.form["planned_expense"])  
+    
+        actual_expense_str = request.form.get("actual_expense", "").strip()
+        actual_expense = float(actual_expense_str) if actual_expense_str else 0.0
 
+        day = request.form.get("day")
+        month = request.form.get("month")
+        year = request.form.get("year")
+        category = request.form.get("category", "")
+        notes = request.form.get("notes", "")
+
+        doc = {
+            "title": title,  
+            "planned_expense": planned_expense,
+            "actual_expense": actual_expense,
+            "day": int(day) if day else None,  
+            "month": int(month) if month else None,
+            "year": int(year) if year else None,
+            "category": category,
+            "notes": notes,
+            "created_at": datetime.datetime.utcnow(),
+        }
+        db.plans.insert_one(doc)
+
+        return redirect(url_for("home"))
+
+    @app.route("/edit/<plan_id>")
+    def edit(plan_id):
+        """
+        Route for GET requests to the edit page.
+        Displays a form users can fill out to edit an existing plan.
+        Args:
+            plan_id (str): The ID of the plan to edit.
+        Returns:
+            rendered template (str): The rendered HTML template.
+        """
+        doc = db.plans.find_one({"_id": ObjectId(plan_id)})
+        return render_template("edit_plan.html", doc=doc)
+
+    @app.route("/edit/<plan_id>", methods=["POST"])
+    def edit_plan(plan_id):
+        """
+        Route for POST requests to the edit page.
+        Accepts the form submission data for the specified plan and updates the document in the database.
+        Args:
+            plan_id (str): The ID of the plan to edit.
+        Returns:
+            redirect (Response): A redirect response to the home page.
+        """
+        title = request.form["title"]
+        planned_expense = float(request.form["planned_expense"])
+
+        actual_expense_str = request.form.get("actual_expense", "").strip()
+        actual_expense = float(actual_expense_str) if actual_expense_str else 0.0
+
+        day = request.form.get("day")
+        month = request.form.get("month")
+        year = request.form.get("year")
+        category = request.form.get("category", "")
+        notes = request.form.get("notes", "")
+
+        doc = {
+            "title": title,
+            "planned_expense": planned_expense,
+            "actual_expense": actual_expense,
+            "day": int(day) if day else None,
+            "month": int(month) if month else None,
+            "year": int(year) if year else None,
+            "category": category,
+            "notes": notes,
+            "created_at": datetime.datetime.utcnow(),
+        }
+
+        db.plans.update_one({"_id": ObjectId(plan_id)}, {"$set": doc})
+
+        return redirect(url_for("home"))
+
+    @app.route("/delete/<plan_id>")
+    def delete(plan_id):
+        """
+        Route for GET requests to the delete page.
+        Deletes the specified plan from the database, and then redirects the browser to the home page.
+        Args:
+            plan_id (str): The ID of the plan to delete.
+        Returns:
+            redirect (Response): A redirect response to the home page.
+        """
+        db.plans.delete_one({"_id": ObjectId(plan_id)})
+        return redirect(url_for("home"))
+
+    @app.route("/search")
+    def search():
+        """
+        Route for GET requests to the search page.
+        Allows users to search plans by category.
+        Returns:
+            rendered template (str): The rendered HTML template.
+        """
+        category = request.args.get("category", "")
+        if category:
+            plans = db.plans.find({"category": {"$regex": category, "$options": "i"}}).sort("created_at", -1)
+        else:
+            plans = db.plans.find({}).sort("created_at", -1)
+        
+        return render_template("index.html", plans=plans, search_category=category)
 
     return app
 

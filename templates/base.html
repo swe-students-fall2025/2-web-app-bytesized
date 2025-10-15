@@ -1,30 +1,18 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Spending Tracker App</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
+    <title>Budget Tracker App</title>
   </head>
   <body>
     <div class="container">
       <header>
-        <h1>💰 Spending Tracker</h1>
+        <h1>💰 Budget Tracker</h1>
         <nav>
           <a href="{{ url_for('home')}}">Home</a>
-          <a href="#">Planned Spending</a>
-          <a href="#">Actual Spending</a>
-          <a href="#">Add Expense</a>
+          <a href="{{ url_for('search')}}">Search</a>
         </nav>
       </header>
       <main>{% block container %} {% endblock %}</main>
-      <footer>
-        <p>
-          &copy; 2025. Spending Tracker App - ByteSized
-        </p>
-      </footer>
     </div>
   </body>
 </html>
