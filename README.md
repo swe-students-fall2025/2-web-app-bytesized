@@ -4,7 +4,15 @@ A little exercise to build a web application following an agile development proc
 
 ## Steps to run the software
 
-### 1. Setups 
+
+### 1. Clone this app to your computer
+
+**First** run in your terminal: 
+`git clone https://github.com/swe-students-fall2025/2-web-app-bytesized.git`
+
+**Second,** change your directory to 2-web-app-bytesized
+
+### 2. Setups 
 https://knowledge.kitchen/content/courses/database-design/notes/mongodb-setup/
 
 The fastest way to see the example app in action on your own computer is to use [Docker](https://www.docker.com).
@@ -23,13 +31,6 @@ If you already have the container, click `start` in docker desktop
 **Third,** build a virtue image
 
 `docker build -t your-image-name . `
-
-### 2. Clone this app to your computer
-
-**First** run in your terminal: 
-`git clone https://github.com/swe-students-fall2025/2-web-app-bytesized.git`
-
-**Second,** change your directory to 2-web-app-bytesized
 
 ### 3. Run the app
 ### Option 1
