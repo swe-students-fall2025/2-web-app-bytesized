@@ -1,67 +1,20 @@
-# Web Application Exercise
 
-A little exercise to build a web application following an agile development process. See the [instructions](instructions.md) for more detail.
+# Budget Buddy 
 
-## Steps to run the software
+## Team Members
 
-
-### 1. Clone this app to your computer
-
-**First** run in your terminal: 
-`git clone https://github.com/swe-students-fall2025/2-web-app-bytesized.git`
-
-**Second,** change your directory to 2-web-app-bytesized
-
-### 2. Setups 
-https://knowledge.kitchen/content/courses/database-design/notes/mongodb-setup/
-
-The fastest way to see the example app in action on your own computer is to use [Docker](https://www.docker.com).
-
-**First** you must...
-
-- install and run [docker desktop](https://www.docker.com/get-started)
-- create a [dockerhub](https://hub.docker.com/signup) account
-
-**Second,** Start a Docker container
-
-run the command, `docker run --name mongodb_dockerhub -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=secret -d mongo:latest`
-
-If you already have the container, click `start` in docker desktop
-
-**Third,** build a virtue image
-
-`docker build -t your-image-name . `
-
-### 3. Run the app
-### Option 1
-* If you edit any of the files in the project, you will have to stop and then restart the containers
-
-* This is the **official** method
-
-* It can connect to a database. However, we do not have a database yet
-
-* Without a database, `docker run -ti --rm -d -p 5001:5000 -e MONGO_URI="mongodb://admin:secret@host.docker.internal:27017/" your-image-name`
-
-* With a database, `docker run -ti --rm -d -p 5001:5000 -e MONGO_DBNAME=your_db_name -e MONGO_URI="mongodb://admin:secret@host.docker.internal:27017/" your-image-name`
-
-* open a web browser and go to `http://localhost:5001`
-
-### Option 2
-
-* Edits are reflected instantly in the browser; just refresh.
-
-* Recommended for use while developing
-
-* Run command, `docker run -ti --rm -d -p 5001:5000 -e MONGO_URI="mongodb://admin:secret@host.docker.internal:27017/" -v $(pwd):/app your-image-name`
-
-* open a web browser and go to `http://localhost:5001`
-
+[Jasmine Zhu](https://github.com/jasminezjr)
+[Athena Luo](https://github.com/funfig16)
+[Esther Feng](https://github.com/yf2685-beep)
+[Zeba Shafi](https://github.com/Zeba-Shafi)
+[Harrison](https://github.com/hoc2006-code)
 
 ## Product vision statement
 
 Our app empowers users to plan and track spending on mobile quickly and clearly by showing **planned vs. actual** amounts per category, so they can make smarter day-to-day money decisions.
 
 ## User stories
+
 - [Full Project Backlog (Issues)](https://github.com/nyu-software-engineering/flask-pymongo-web-app-example.git)
 
 1. **View planned spending**
