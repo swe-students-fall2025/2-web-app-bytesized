@@ -12,6 +12,18 @@
           <a href="{{ url_for('search')}}">Search</a>
         </nav>
       </header>
+      {# Flash messages area #}
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flashes" style="margin:12px 0;">
+            {% for category, message in messages %}
+              <div class="flash {{ category }}" style="padding:8px; border-radius:4px; margin-bottom:6px; background:#f0f0f0;">
+                {{ message }}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
       <main>{% block container %} {% endblock %}</main>
     </div>
   </body>

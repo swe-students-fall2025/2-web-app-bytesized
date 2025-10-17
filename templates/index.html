@@ -3,7 +3,83 @@
 {% block container %}
 
     <h2>Welcome to Your Budget Tracker!</h2>
-    <p>Empower students to plan and track spending on mobile quickly and clearly.</p>
+    <p>Empower users to plan and track spending on mobile quickly and clearly!</p>
+
+    <!---Monthly Budget Overview-->
+
+        <!-- Monthly Budget Overview Card -->
+        <section id="monthly-budget-overview" style="margin:12px 0;">
+                                    <h3 style="display:inline-block; margin-right:12px;">Monthly Budget Overview</h3>
+                        <a href="{{ url_for('add_monthly_budget') }}"><button style="display:inline-block;">New Monthly Budget</button></a>
+            <div id="monthlyBudgetCard" style="border:1px solid #ccc; padding:12px; max-width:520px;">
+                <p id="mb-monthyear" style="margin:0 0 8px 0; font-weight:600; color:#333;"></p>
+                <div id="mb-loading">Loading monthly summary...</div>
+
+                <div id="mb-content" style="display:none;">
+                    <p><strong>Budget:</strong> $<span id="mb-budget">0.00</span></p>
+                    <p><strong>Spent:</strong> $<span id="mb-spent">0.00</span></p>
+                    <p><strong>Planned:</strong> $<span id="mb-planned">0.00</span></p>
+                    <p><strong>Remaining:</strong> $<span id="mb-remaining">0.00</span></p>
+                </div>
+
+                <div id="mb-no-budget" style="display:none; color:#666;">No monthly budget set for this month.</div>
+            </div>
+        </section>
+
+        <!-- Placeholders for charts (future) -->
+        <!-- Add line chart for expenses over time here -->
+        <!-- Add pie chart for expenses by category here -->
+
+        <script>
+            (function(){
+                // Fetch budget summary for current month/year and populate the card
+                const now = new Date();
+                const month = now.getMonth() + 1; // JS months are 0-based
+                const year = now.getFullYear();
+                const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+                const monthYearEl = document.getElementById('mb-monthyear');
+                if (monthYearEl) monthYearEl.textContent = `${monthNames[now.getMonth()]} ${year}`;
+                const url = `/budget/summary/${month}/${year}`;
+
+                const loading = document.getElementById('mb-loading');
+                const content = document.getElementById('mb-content');
+                const nobudget = document.getElementById('mb-no-budget');
+
+                fetch(url)
+                    .then(async res => {
+                        if (!res.ok) {
+                            loading.style.display = 'none';
+                            nobudget.style.display = 'block';
+                            return;
+                        }
+                        const j = await res.json();
+
+                        const budget = j.budget ?? null;
+                        const spent = j.spent ?? 0;
+                        const planned = j.planned ?? 0;
+                        // API may provide remaining_budget; fall back to budget-spent if not present
+                        const remaining = (j.remaining_budget !== undefined && j.remaining_budget !== null)
+                                                            ? j.remaining_budget
+                                                            : (budget !== null ? (budget - spent) : null);
+
+                        loading.style.display = 'none';
+                        content.style.display = 'block';
+
+                        document.getElementById('mb-budget').textContent = budget === null ? '—' : Number(budget).toFixed(2);
+                        document.getElementById('mb-spent').textContent = Number(spent).toFixed(2);
+                        document.getElementById('mb-planned').textContent = Number(planned).toFixed(2);
+                        document.getElementById('mb-remaining').textContent = remaining === null ? '—' : Number(remaining).toFixed(2);
+                    })
+                    .catch(err => {
+                        loading.textContent = 'Could not load monthly summary';
+                        console.error('budget summary fetch error', err);
+                    });
+            })();
+        </script>
+
+    
+    
+
 
     <!-- Search Form -->
     <div>
