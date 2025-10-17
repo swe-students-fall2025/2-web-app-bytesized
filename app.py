@@ -405,8 +405,73 @@ def create_app():
         return jsonify(out)
 
     
+    # -----------------------
+    # Budget summary
+    # -----------------------
+    @app.route("/budget/summary/<int:month>/<int:year>")
+    def budget_summary(month, year):
+        """
+        Returns JSON: {month, year, spent, planned, budget(optional if exists), 
+                      remaining_budget(optional if budget exists), 
+                      unallocated_budget(optional if budget exists)}
+        If a monthly_budget exists for the month/year, include budget and calculations. 
+        Otherwise budget/remaining_budget/unallocated_budget = null.
+        """
+        # Calculate total spent and total planned for month/year
+        agg = list(db.plans.aggregate([
+            {"$match": {"month": month, "year": year}},
+            {"$group": {
+                "_id": None, 
+                "spent": {"$sum": "$actual_expense"},
+                "planned": {"$sum": "$planned_expense"}
+            }}
+        ]))
+    
+        spent_amount = float(agg[0]["spent"]) if agg and agg[0].get("spent") is not None else 0.0
+        planned_amount = float(agg[0]["planned"]) if agg and agg[0].get("planned") is not None else 0.0
 
+        # Get monthly budget
+        mb_doc = db.monthly_budgets.find_one({"month": month, "year": year})
+    
+        if mb_doc:
+            budget_value = float(mb_doc["budget"])
+            remaining_budget = budget_value - spent_amount
+            unallocated_budget = budget_value - planned_amount
+        else:
+            budget_value = None
+            remaining_budget = None
+            unallocated_budget = None
 
+        return jsonify({
+            "month": month,
+            "year": year,
+            "spent": spent_amount,
+            "planned": planned_amount,
+            "budget": budget_value,
+            "remaining_budget": remaining_budget,      # Money left after actual spending
+            "unallocated_budget": unallocated_budget   # Money not yet allocated to plans
+        })
+
+    # -----------------------
+    # Additional APIs to list all plans
+    # -----------------------
+    @app.route("/api/plans", methods=["GET"])
+    def api_get_plans():
+        cursor = db.plans.find({}).sort("created_at", -1)
+        out = []
+        for p in cursor:
+            p["_id"] = str(p["_id"])
+            out.append(p)
+        return jsonify(out)
+
+    @app.route("/api/budgets", methods=["GET"])
+    def api_get_budgets():
+        cursor = db.monthly_budgets.find({}).sort([("year", -1), ("month", -1)])
+        out = []
+        for b in cursor:
+            b["_id"] = str(b["_id"])
+            out.append(b)
+        return jsonify(out)
 
     return app
 
