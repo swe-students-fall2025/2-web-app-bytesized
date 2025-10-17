@@ -473,6 +473,43 @@ def create_app():
             out.append(b)
         return jsonify(out)
 
+    
+
+    @app.route("/budget/category-breakdown/<int:month>/<int:year>")
+    def category_breakdown(month, year):
+        """
+        Returns JSON: {month, year, categories: [{category, spent, planned, count}]}
+        Groups by unique categories that users actually used that month
+        """
+        # Aggregate to get spent and planned amounts by category
+        agg = list(db.plans.aggregate([
+            {"$match": {"month": month, "year": year}},
+            {"$group": {
+                "_id": "$category",
+                "spent": {"$sum": "$actual_expense"},
+                "planned": {"$sum": "$planned_expense"},
+                "count": {"$sum": 1}
+            }},
+            {"$sort": {"spent": -1}}  # Sort by spent amount descending
+        ]))
+    
+        # Format the results
+        categories = []
+        for item in agg:
+            categories.append({
+                "category": item["_id"] if item["_id"] else "Uncategorized",
+                "spent": float(item["spent"]),
+                "planned": float(item["planned"]),
+                "count": item["count"]
+            })
+    
+        return jsonify({
+            "month": month,
+            "year": year,
+            "categories": categories
+        })
+
+        
     return app
 
 app = create_app()
