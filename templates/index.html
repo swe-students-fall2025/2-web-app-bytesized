@@ -104,11 +104,9 @@
             })();
         </script>
 
-    
-    
 
-
-    <!-- Search Form -->
+    {# Search Form (hidden) #}
+    {#
     <div>
         <form method="GET" action="{{ url_for('search') }}">
             <input type="text" name="category" placeholder="Search by category..." 
@@ -119,13 +117,17 @@
             {% endif %}
         </form>
     </div>
+    #}
 
-    <!-- Add New Plan Form -->
+    {# Add New Plan Form (hidden) #}
+    {#
     <article class="plan new-plan">
         {% include 'new_plan_form.html' %}
     </article>
+    #}
 
-    <!-- Display Existing Plans -->
+    {# Display Existing Plans (hidden) #}
+    {#
     <div>
         <h3>Your Budget Plans</h3>
         {% for plan in plans %}
@@ -162,5 +164,6 @@
         {% endfor %}
     
     </div>
+    #}
 
 {% endblock %}
