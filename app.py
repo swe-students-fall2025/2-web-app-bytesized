@@ -8,7 +8,6 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 # load environment variables from .env file
 load_dotenv()
 
-
 def create_app():
     """
     Create and configure the Flask application.
@@ -19,6 +18,10 @@ def create_app():
     # load flask config from env variables
     config = dotenv_values()
     app.config.from_mapping(config)
+    
+    # Ensure SECRET_KEY is set (required for sessions and flash messages)
+    if not app.config.get('SECRET_KEY'):
+        app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 
     cxn = pymongo.MongoClient(os.getenv("MONGO_URI"))
     db = cxn[os.getenv("MONGO_DBNAME")]
@@ -473,7 +476,6 @@ def create_app():
             out.append(b)
         return jsonify(out)
 
-    
 
     @app.route("/budget/category-breakdown/<int:month>/<int:year>")
     def category_breakdown(month, year):
