@@ -4,7 +4,7 @@
   <h2>Add Monthly Budget</h2>
   <p>Use this form to create a monthly budget. Note: multiple budgets for the same month/year are allowed (history preserved).</p>
 
-  <form method="POST" action="{{ url_for('add_monthly_budget') }}">
+  <form method="POST" action="{{ url_for('add_monthly_budget') }}" id="addBudgetForm">
     <div>
       <label>Budget ($): *</label>
       <input type="number" name="budget" step="0.01" min="0" required />
@@ -12,12 +12,12 @@
 
     <div>
       <label>Month (1-12): *</label>
-      <input type="number" name="month" min="1" max="12" required />
+      <input type="number" name="month" id="monthInput" min="1" max="12" required />
     </div>
 
     <div>
       <label>Year: *</label>
-      <input type="number" name="year" min="2000" max="2100" required />
+      <input type="number" name="year" id="yearInput" min="2000" max="2100" required />
     </div>
 
     <div>
@@ -30,5 +30,17 @@
       <input type="submit" value="Create Budget" />
     </div>
   </form>
+
+  <script>
+    // Auto-fill current month and year
+    (function(){
+      const now = new Date();
+      const month = now.getMonth() + 1; // JS months are 0-based
+      const year = now.getFullYear();
+      
+      document.getElementById('monthInput').value = month;
+      document.getElementById('yearInput').value = year;
+    })();
+  </script>
 
 {% endblock %}

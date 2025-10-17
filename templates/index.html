@@ -9,16 +9,15 @@
 
         <!-- Monthly Budget Overview Card -->
         <section id="monthly-budget-overview" style="margin:12px 0;">
-                                    <h3 style="display:inline-block; margin-right:12px;">Monthly Budget Overview</h3>
-                        <a href="{{ url_for('add_monthly_budget') }}"><button style="display:inline-block;">New Monthly Budget</button></a>
-                        <div id="monthlyBudgetCard" style="border:1px solid #ccc; padding:12px; max-width:520px; position:relative;">
-                                <div style="display:flex; justify-content:space-between; align-items:center;">
-                                    <p id="mb-monthyear" style="margin:0 0 8px 0; font-weight:600; color:#333;"></p>
-                                    <a id="mb-edit-link" href="#" style="display:none;">
-                                        <button id="mb-edit-btn" aria-label="Edit monthly budget">Edit</button>
-                                    </a>
-                                </div>
-                                <div id="mb-loading">Loading monthly summary...</div>
+            <h3>Monthly Budget Overview</h3>
+            <div id="monthlyBudgetCard" style="border:1px solid #ccc; padding:12px; max-width:520px; position:relative;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <p id="mb-monthyear" style="margin:0 0 8px 0; font-weight:600; color:#333;"></p>
+                    <a id="mb-edit-link" href="#" style="display:none;">
+                        <button id="mb-edit-btn" aria-label="Edit monthly budget">Edit</button>
+                    </a>
+                </div>
+                <div id="mb-loading">Loading monthly summary...</div>
 
                 <div id="mb-content" style="display:none;">
                     <p><strong>Budget:</strong> $<span id="mb-budget">0.00</span></p>
@@ -27,7 +26,10 @@
                     <p><strong>Remaining:</strong> $<span id="mb-remaining">0.00</span></p>
                 </div>
 
-                <div id="mb-no-budget" style="display:none; color:#666;">No monthly budget set for this month.</div>
+                <div id="mb-no-budget" style="display:none; text-align:center; padding:20px 0;">
+                    <p style="color:#666; margin-bottom:12px;">No monthly budget set for this month.</p>
+                    <a href="{{ url_for('add_monthly_budget') }}"><button>New Monthly Budget</button></a>
+                </div>
             </div>
         </section>
 
@@ -54,6 +56,7 @@
                     try {
                         const res = await fetch(url);
                         if (!res.ok) {
+                            // No budget found - show the centered button in the card
                             loading.style.display = 'none';
                             nobudget.style.display = 'block';
                             return;
@@ -61,19 +64,28 @@
 
                         const j = await res.json();
                         const budget = j.budget ?? null;
+                        
+                        if (budget === null) {
+                            // No budget set - show centered button in card
+                            loading.style.display = 'none';
+                            nobudget.style.display = 'block';
+                            return;
+                        }
+
+                        // Budget exists - show content
                         const spent = j.spent ?? 0;
                         const planned = j.planned ?? 0;
                         const remaining = (j.remaining_budget !== undefined && j.remaining_budget !== null)
                                             ? j.remaining_budget
-                                            : (budget !== null ? (budget - spent) : null);
+                                            : (budget - spent);
 
                         loading.style.display = 'none';
                         content.style.display = 'block';
 
-                        document.getElementById('mb-budget').textContent = budget === null ? '—' : Number(budget).toFixed(2);
+                        document.getElementById('mb-budget').textContent = Number(budget).toFixed(2);
                         document.getElementById('mb-spent').textContent = Number(spent).toFixed(2);
                         document.getElementById('mb-planned').textContent = Number(planned).toFixed(2);
-                        document.getElementById('mb-remaining').textContent = remaining === null ? '—' : Number(remaining).toFixed(2);
+                        document.getElementById('mb-remaining').textContent = Number(remaining).toFixed(2);
 
                         // budget_summary does not include budget_id; try the dedicated endpoint to get it
                         const editLink = document.getElementById('mb-edit-link');
