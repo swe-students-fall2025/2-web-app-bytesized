@@ -18,6 +18,10 @@ def create_app():
     # load flask config from env variables
     config = dotenv_values()
     app.config.from_mapping(config)
+    
+    # Ensure SECRET_KEY is set (required for sessions and flash messages)
+    if not app.config.get('SECRET_KEY'):
+        app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 
     cxn = pymongo.MongoClient(os.getenv("MONGO_URI"))
     db = cxn[os.getenv("MONGO_DBNAME")]

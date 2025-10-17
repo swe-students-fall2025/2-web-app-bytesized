@@ -51,7 +51,8 @@
                 const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
                 const monthYearEl = document.getElementById('mb-monthyear');
                 if (monthYearEl) monthYearEl.textContent = `${monthNames[now.getMonth()]} ${year}`;
-                const url = `/budget/summary/${month}/${year}`;
+                // Add cache-busting timestamp to force fresh data
+                const url = `/budget/summary/${month}/${year}?_=${Date.now()}`;
 
                 const loading = document.getElementById('mb-loading');
                 const content = document.getElementById('mb-content');
@@ -103,7 +104,7 @@
                             if (actionsDiv) actionsDiv.style.display = 'block';
                         } else if (editLink && deleteLink) {
                             // attempt to fetch budget id from /monthly_budget/get/<month>/<year>
-                            const getUrl = `/monthly_budget/get/${month}/${year}`;
+                            const getUrl = `/monthly_budget/get/${month}/${year}?_=${Date.now()}`;
                             try {
                                 const r2 = await fetch(getUrl);
                                 if (r2.ok) {
