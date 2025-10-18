@@ -83,8 +83,7 @@ def create_app():
             redirect (Response): A redirect response to the home page.
         """
         title = request.form["title"]  
-        planned_expense = float(request.form["planned_expense"])  
-    
+         
         actual_expense_str = request.form.get("actual_expense", "").strip()
         actual_expense = float(actual_expense_str) if actual_expense_str else 0.0
 
@@ -96,7 +95,6 @@ def create_app():
 
         doc = {
             "title": title,  
-            "planned_expense": planned_expense,
             "actual_expense": actual_expense,
             "day": int(day) if day else None,  
             "month": int(month) if month else None,
@@ -133,7 +131,6 @@ def create_app():
             redirect (Response): A redirect response to the home page.
         """
         title = request.form["title"]
-        planned_expense = float(request.form["planned_expense"])
 
         actual_expense_str = request.form.get("actual_expense", "").strip()
         actual_expense = float(actual_expense_str) if actual_expense_str else 0.0
@@ -146,7 +143,6 @@ def create_app():
 
         doc = {
             "title": title,
-            "planned_expense": planned_expense,
             "actual_expense": actual_expense,
             "day": int(day) if day else None,
             "month": int(month) if month else None,
@@ -414,24 +410,22 @@ def create_app():
     @app.route("/budget/summary/<int:month>/<int:year>")
     def budget_summary(month, year):
         """
-        Returns JSON: {month, year, spent, planned, budget(optional if exists), 
+        Returns JSON: {month, year, spent, budget(optional if exists), 
                       remaining_budget(optional if budget exists), 
                       unallocated_budget(optional if budget exists)}
         If a monthly_budget exists for the month/year, include budget and calculations. 
         Otherwise budget/remaining_budget/unallocated_budget = null.
         """
-        # Calculate total spent and total planned for month/year
+        # Calculate total spent for month/year
         agg = list(db.plans.aggregate([
             {"$match": {"month": month, "year": year}},
             {"$group": {
                 "_id": None, 
                 "spent": {"$sum": "$actual_expense"},
-                "planned": {"$sum": "$planned_expense"}
             }}
         ]))
     
         spent_amount = float(agg[0]["spent"]) if agg and agg[0].get("spent") is not None else 0.0
-        planned_amount = float(agg[0]["planned"]) if agg and agg[0].get("planned") is not None else 0.0
 
         # Get monthly budget
         mb_doc = db.monthly_budgets.find_one({"month": month, "year": year})
@@ -439,20 +433,16 @@ def create_app():
         if mb_doc:
             budget_value = float(mb_doc["budget"])
             remaining_budget = budget_value - spent_amount
-            unallocated_budget = budget_value - planned_amount
         else:
             budget_value = None
             remaining_budget = None
-            unallocated_budget = None
 
         return jsonify({
             "month": month,
             "year": year,
             "spent": spent_amount,
-            "planned": planned_amount,
             "budget": budget_value,
             "remaining_budget": remaining_budget,      # Money left after actual spending
-            "unallocated_budget": unallocated_budget   # Money not yet allocated to plans
         })
 
     # -----------------------
@@ -480,16 +470,15 @@ def create_app():
     @app.route("/budget/category-breakdown/<int:month>/<int:year>")
     def category_breakdown(month, year):
         """
-        Returns JSON: {month, year, categories: [{category, spent, planned, count}]}
+        Returns JSON: {month, year, categories: [{category, spent, count}]}
         Groups by unique categories that users actually used that month
         """
-        # Aggregate to get spent and planned amounts by category
+        # Aggregate to get spent amounts by category
         agg = list(db.plans.aggregate([
             {"$match": {"month": month, "year": year}},
             {"$group": {
                 "_id": "$category",
                 "spent": {"$sum": "$actual_expense"},
-                "planned": {"$sum": "$planned_expense"},
                 "count": {"$sum": 1}
             }},
             {"$sort": {"spent": -1}}  # Sort by spent amount descending
@@ -501,7 +490,6 @@ def create_app():
             categories.append({
                 "category": item["_id"] if item["_id"] else "Uncategorized",
                 "spent": float(item["spent"]),
-                "planned": float(item["planned"]),
                 "count": item["count"]
             })
     
@@ -511,7 +499,7 @@ def create_app():
             "categories": categories
         })
 
-        
+
     return app
 
 app = create_app()
