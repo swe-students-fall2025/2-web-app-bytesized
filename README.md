@@ -101,61 +101,80 @@ Our app empowers users to plan and track spending on mobile quickly and clearly 
 
 ## Steps necessary to run the software
 
-### 1. Clone this app to your computer
+### 0. Set up docker
+install and run docker desktop
+create a dockerhub account
 
-**First** run in your terminal: 
-`git clone https://github.com/swe-students-fall2025/2-web-app-bytesized.git`
+### 1. Create and activate a virtual environment
 
-**Second,** change your directory to 2-web-app-bytesized
+**First**, make sure you have Python and `pipenv` installed.
 
-**Third,** place the `.env` file into the 2-web-app-bytesized folder. The file is shared in the team's channel.
+Run in your terminal:  
+`pip install pipenv`
 
-### 2. Setups
+**Second**, create and activate a virtual environment for this project:  
+`pipenv shell`
 
-https://knowledge.kitchen/content/courses/database-design/notes/mongodb-setup/
+Your terminal should now show a prefix like `(2-web-app-bytesized)` — this means you’re inside the environment.
 
-The fastest way to see the example app in action on your own computer is to use [Docker](https://www.docker.com).
+**Third**, install all the project dependencies from the requirements file:  
+`pipenv install -r requirements.txt`
 
-**First** you must...
+To verify everything installed correctly, you can check:  
+`pip freeze`
 
-- install and run [docker desktop](https://www.docker.com/get-started)
-- create a [dockerhub](https://hub.docker.com/signup) account
+---
 
-**Second,** Start a Docker container
+### 2. Set up environment variables
 
-run the command, `docker run --name mongodb_dockerhub -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=secret -d mongo:latest`
+**First**, copy the example environment file to create your own local configuration:  
+`cp env.example .env`
 
-If you already have the container, click `start` in docker desktop
+**Second**, open `.env` and edit it to include your database name and MongoDB URI. For example:
 
-**Third,** build a virtual image
+MONGO_DBNAME=example
+MONGO_URI="mongodb://admin:secret@mongodb:27017/?authSource=admin"
+FLASK_APP=app.py
+FLASK_ENV=development
+FLASK_PORT=5000
 
-`docker build -t your-image-name .`
 
-### 3. Run the app
+> ⚠️ The `.env` file must **not** be pushed to GitHub, as it contains private credentials.  
+> Only commit `env.example` with dummy values.
+> if you use a database, you should change the URI to 
 
-#### Option 1
+---
 
-- If you edit any of the files in the project, you will have to stop and then restart the containers
+### 3. Run the app using Docker Compose
 
-- This is the **official** method
+The easiest way to launch both the Flask web server and MongoDB is through **Docker Compose**.
 
-- It can connect to a database. However, we do not have a database yet
+**First**, build and start the containers:  
+`docker compose up --build`
 
-- Without a database, `docker run -ti --rm -d -p 5001:5000 -e MONGO_URI="mongodb://admin:secret@host.docker.internal:27017/" your-image-name`
+If you encounter a “port already in use” error, stop any previous containers first:  
+`docker compose down`  ， then change the ports number in the docker-compose.yml
+then rerun the previous command.
 
-- With a database, `docker run -ti --rm -d -p 5001:5000 -e MONGO_DBNAME=your_db_name -e MONGO_URI="mongodb://admin:secret@host.docker.internal:27017/" your-image-name`
+Once it builds successfully, open a web browser and go to:  
+`http://localhost:5000`
 
-- open a web browser and go to `http://localhost:5001`
+You should see the running Flask web app connected to MongoDB.
 
-### Option 2
+---
 
-- Edits are reflected instantly in the browser; just refresh.
+### 4. Stop the app
 
-- Recommended for use while developing
+To shut down the containers:  
+`docker compose down`
 
-- Run command, `docker run -ti --rm -d -p 5001:5000 -e MONGO_URI="mongodb://admin:secret@host.docker.internal:27017/" -v $(pwd):/app your-image-name`
+If you also want to remove MongoDB data volumes (for a clean reset):  
+`docker compose down --volumes`
 
-- open a web browser and go to `http://localhost:5001`
+---
+
+
+
 
 ## Task boards
 
