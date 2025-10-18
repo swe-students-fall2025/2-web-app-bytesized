@@ -15,7 +15,7 @@
                     <div style="display:flex; gap:8px; align-items:center;">
                         <button id="mb-prev" aria-label="Previous month">◀ Prev</button>
                         <input type="month" id="mb-select-month" aria-label="Select month" />
-                        <button id="mb-go">Go</button>
+                        <button id="mb-next" aria-label="Next month">Next ▶</button>
                         <p id="mb-monthyear" style="margin:0 0 8px 0; font-weight:600; color:#333;"></p>
                     </div>
                     <div id="mb-actions" style="display:none;">
@@ -64,11 +64,14 @@
                 const content = document.getElementById('mb-content');
                 const nobudget = document.getElementById('mb-no-budget');
                 const addLink = document.getElementById('mb-add-link');
+                const editLink = document.getElementById('mb-edit-link');
+                const deleteLink = document.getElementById('mb-delete-link');
+                const actionsDiv = document.getElementById('mb-actions');
 
                 // month picker element
                 const monthPicker = document.getElementById('mb-select-month');
                 const prevBtn = document.getElementById('mb-prev');
-                const goBtn = document.getElementById('mb-go');
+                const nextBtn = document.getElementById('mb-next');
 
                 // set max for monthPicker to current month to disable future months in browser UI
                 if (monthPicker) {
@@ -96,6 +99,10 @@
                     loading.style.display = 'block';
                     content.style.display = 'none';
                     nobudget.style.display = 'none';
+                    // hide action buttons until we know there is a budget
+                    if (actionsDiv) actionsDiv.style.display = 'none';
+                    if (editLink) editLink.href = '#';
+                    if (deleteLink) deleteLink.href = '#';
 
                     const url = `/budget/summary/${m}/${y}?_=${Date.now()}`;
                     try {
@@ -103,6 +110,7 @@
                         if (!res.ok) {
                             loading.style.display = 'none';
                             nobudget.style.display = 'block';
+                            if (actionsDiv) actionsDiv.style.display = 'none';
                             return;
                         }
 
@@ -111,6 +119,7 @@
                         if (budget === null) {
                             loading.style.display = 'none';
                             nobudget.style.display = 'block';
+                            if (actionsDiv) actionsDiv.style.display = 'none';
                             return;
                         }
 
@@ -174,15 +183,17 @@
                     if (m < 1) { m = 12; y -= 1; }
                     currentMonth = m; currentYear = y;
                     loadMonth(y, m);
+                    // re-evaluate next button state
+                    updateNextButton();
                 });
 
-                goBtn && goBtn.addEventListener('click', function(){
-                    const v = monthPicker && monthPicker.value;
+                // change month on manual picker change
+                monthPicker && monthPicker.addEventListener('change', function(){
+                    const v = monthPicker.value;
                     if (!v) return;
                     const [yStr, mStr] = v.split('-');
                     const y2 = parseInt(yStr, 10);
                     const m2 = parseInt(mStr, 10);
-                    // prevent future month selection
                     const now = new Date();
                     const maxY = now.getFullYear();
                     const maxM = now.getMonth() + 1;
@@ -190,13 +201,45 @@
                         // clamp to current month
                         currentYear = maxY; currentMonth = maxM;
                         loadMonth(maxY, maxM);
+                        updateNextButton();
                         return;
                     }
                     if (!isNaN(y2) && !isNaN(m2)) {
                         currentMonth = m2; currentYear = y2;
                         loadMonth(y2, m2);
+                        updateNextButton();
                     }
                 });
+
+                // Next button handler (advance but not beyond current month)
+                nextBtn && nextBtn.addEventListener('click', function(){
+                    const now = new Date();
+                    const maxY = now.getFullYear();
+                    const maxM = now.getMonth() + 1;
+                    let m = currentMonth;
+                    let y = currentYear;
+                    m += 1;
+                    if (m > 12) { m = 1; y += 1; }
+                    // clamp to current month/year
+                    if (y > maxY || (y === maxY && m > maxM)) {
+                        m = maxM; y = maxY;
+                    }
+                    currentMonth = m; currentYear = y;
+                    loadMonth(y, m);
+                    updateNextButton();
+                });
+
+                function updateNextButton(){
+                    if (!nextBtn) return;
+                    const now = new Date();
+                    const maxY = now.getFullYear();
+                    const maxM = now.getMonth() + 1;
+                    if (currentYear > maxY || (currentYear === maxY && currentMonth >= maxM)){
+                        nextBtn.disabled = true;
+                    } else {
+                        nextBtn.disabled = false;
+                    }
+                }
 
                 // initial load for current month/year
                 loadMonth(currentYear, currentMonth);
