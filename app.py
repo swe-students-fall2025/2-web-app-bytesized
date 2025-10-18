@@ -662,6 +662,14 @@ def create_app():
         })
 
 
+    @app.route('/settings')
+    def settings():
+        """
+        Render a simple settings page (placeholder).
+        """
+        return render_template('settings.html')
+
+
     return app
 
 app = create_app()
