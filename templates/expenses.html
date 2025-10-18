@@ -1,0 +1,68 @@
+{% extends "base.html" %} {% block title %}Expenses{% endblock %} {% block
+container %}
+<h2>Expenses</h2>
+
+<!-- Search Existing expenses -->
+<form
+  method="get"
+  action="{{ url_for('expenses_list') }}"
+  style="margin-bottom: 12px"
+>
+  <input
+    name="q"
+    placeholder="Search notes/title…"
+    value="{{ q|default('') }}"
+  />
+  <input
+    name="category"
+    placeholder="Category…"
+    value="{{ category|default('') }}"
+  />
+  <input type="month" name="ym" value="{{ ym|default('') }}" />
+  <button type="submit">Search</button>
+  <a href="{{ url_for('expenses_list') }}">Clear</a>
+</form>
+
+<!-- Add new expenses -->
+
+<p><a href="{{ url_for('expense_new') }}">+ Add Expense</a></p>
+
+<!-- Display Existing expenses -->
+
+<ul>
+  {% for e in expenses %}
+  <li style="margin: 8px 0">
+    {{ e.date or (e.year ~ '-' ~ e.month ~ '-' ~ e.day) }} — ${{ e.amount }} —
+    {{ e.category or 'uncategorized' }}
+    <em>{{ e.note }}</em>
+    <a href="{{ url_for('expense_edit', expense_id=e._id) }}">Edit</a>
+    <form
+      method="post"
+      action="{{ url_for('expense_delete', expense_id=e._id) }}"
+      style="display: inline"
+    >
+      <button type="submit">Delete</button>
+    </form>
+  </li>
+  {% else %}
+  <li>No expenses found.</li>
+  {% endfor %}
+</ul>
+
+{% if page and total_pages %}
+<nav style="margin-top: 12px">
+  {% if page > 1 %}
+  <a
+    href="{{ url_for('expenses_list', page=page-1, q=q, category=category, ym=ym) }}"
+    >Prev</a
+  >
+  {% endif %}
+  <span> Page {{ page }} / {{ total_pages }} </span>
+  {% if page < total_pages %}
+  <a
+    href="{{ url_for('expenses_list', page=page+1, q=q, category=category, ym=ym) }}"
+    >Next</a
+  >
+  {% endif %}
+</nav>
+{% endif %} {% endblock %}

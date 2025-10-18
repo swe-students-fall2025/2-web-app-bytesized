@@ -10,22 +10,37 @@
         <nav>
           <a href="{{ url_for('home')}}">Home</a>
           <a href="{{ url_for('search')}}">Search</a>
+          <a href="{{ url_for('expenses_list')}}">Expenses</a>
         </nav>
       </header>
-      {# Flash messages area #}
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          <div class="flashes" style="margin:12px 0;">
-            {% for category, message in messages %}
-              <div class="flash {{ category }}" style="padding:8px; border-radius:4px; margin-bottom:6px; background:#f0f0f0;">
-                {{ message }}
-              </div>
-            {% endfor %}
-          </div>
-        {% endif %}
-      {% endwith %}
+      {# Flash messages area #} {% with messages =
+      get_flashed_messages(with_categories=true) %} {% if messages %}
+      <div class="flashes" style="margin: 12px 0">
+        {% for category, message in messages %}
+        <div
+          class="flash {{ category }}"
+          style="
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            background: #f0f0f0;
+          "
+        >
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %} {% endwith %}
       <main>{% block container %} {% endblock %}</main>
-      <footer style="margin-top:40px; padding:20px 0; text-align:center; border-top:1px solid #ddd; color:#666;">
+      <footer
+        style="
+          margin-top: 40px;
+          padding: 20px 0;
+          text-align: center;
+          border-top: 1px solid #ddd;
+          color: #666;
+        "
+      >
         <p>&copy; 2025 Budget Tracker. All rights reserved.</p>
       </footer>
     </div>
