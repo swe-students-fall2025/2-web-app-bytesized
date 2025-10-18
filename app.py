@@ -581,20 +581,20 @@ def create_app():
         If a monthly_budget exists for the month/year, include budget and calculations. 
         Otherwise budget/remaining_budget/unallocated_budget = null.
         """
-        # Calculate total spent for month/year
-        agg = list(db.plans.aggregate([
+        # Calculate total spent for month/year from EXPENSES collection
+        agg = list(db.expenses.aggregate([
             {"$match": {"month": month, "year": year}},
             {"$group": {
                 "_id": None, 
-                "spent": {"$sum": "$actual_expense"},
+                "spent": {"$sum": "$amount"},  #  amount
             }}
         ]))
-    
+        
         spent_amount = float(agg[0]["spent"]) if agg and agg[0].get("spent") is not None else 0.0
 
         # Get monthly budget
         mb_doc = db.monthly_budgets.find_one({"month": month, "year": year})
-    
+        
         if mb_doc:
             budget_value = float(mb_doc["budget"])
             remaining_budget = budget_value - spent_amount
@@ -607,7 +607,7 @@ def create_app():
             "year": year,
             "spent": spent_amount,
             "budget": budget_value,
-            "remaining_budget": remaining_budget,      # Money left after actual spending
+            "remaining_budget": remaining_budget,
         })
 
     # -----------------------
@@ -638,17 +638,17 @@ def create_app():
         Returns JSON: {month, year, categories: [{category, spent, count}]}
         Groups by unique categories that users actually used that month
         """
-        # Aggregate to get spent amounts by category
-        agg = list(db.plans.aggregate([
+        # Aggregate to get spent amounts by category from EXPENSES
+        agg = list(db.expenses.aggregate([
             {"$match": {"month": month, "year": year}},
             {"$group": {
                 "_id": "$category",
-                "spent": {"$sum": "$actual_expense"},
+                "spent": {"$sum": "$amount"},  #amount
                 "count": {"$sum": 1}
             }},
-            {"$sort": {"spent": -1}}  # Sort by spent amount descending
+            {"$sort": {"spent": -1}}
         ]))
-    
+        
         # Format the results
         categories = []
         for item in agg:
@@ -657,7 +657,7 @@ def create_app():
                 "spent": float(item["spent"]),
                 "count": item["count"]
             })
-    
+        
         return jsonify({
             "month": month,
             "year": year,
