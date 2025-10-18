@@ -9,11 +9,7 @@
         <input type="text" name="title" value="{{ doc.title }}" required />
     </div>
     
-    <div>
-        <label>Planned Expense ($): *</label>
-        <input type="number" name="planned_expense" step="0.01" min="0" 
-               value="{{ doc.planned_expense }}" required />
-    </div>
+    <!-- Planned expense removed: server stores actual_expense only -->
     
     <div>
         <label>Actual Expense ($):</label>

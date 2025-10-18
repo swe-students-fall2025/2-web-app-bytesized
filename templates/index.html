@@ -32,7 +32,6 @@
                 <div id="mb-content" style="display:none;">
                     <p><strong>Budget:</strong> $<span id="mb-budget">0.00</span></p>
                     <p><strong>Spent:</strong> $<span id="mb-spent">0.00</span></p>
-                    <p><strong>Planned:</strong> $<span id="mb-planned">0.00</span></p>
                     <p><strong>Remaining:</strong> $<span id="mb-remaining">0.00</span></p>
                 </div>
 
@@ -43,22 +42,51 @@
             </div>
         </section>
 
-        <!-- Placeholders for charts (future) -->
-        <!-- Add line chart for expenses over time here -->
-        <!-- Add pie chart for expenses by category here -->
+        <!-- Category breakdown pie chart card -->
+        <section id="category-breakdown" style="margin:12px 0;">
+            <h3>Expenses by Category (month)</h3>
+            <div id="cat-card" style="width:320px; height:320px; border:1px solid #ccc; display:flex; align-items:center; justify-content:center; position:relative;">
+                <canvas id="cat-pie-canvas" width="280" height="280" style="display:none;"></canvas>
+                <div id="cat-no-data" style="text-align:center; color:#666;">Loading...</div>
+                <div id="cat-legend" style="position:absolute; right:8px; top:8px; max-width:140px; font-size:12px; display:none;"></div>
+            </div>
+        </section>
+
+    <!-- Placeholders for charts (future) -->
+    <!-- Add line chart for expenses over time here -->
+    <!-- Add pie chart for expenses by category here -->
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
         <script>
             (function(){
                 // Fetch budget summary for current month/year and populate the card
                 const now = new Date();
-                const month = now.getMonth() + 1; // JS months are 0-based
-                const year = now.getFullYear();
+                const curMonthDefault = now.getMonth() + 1; // JS months are 0-based
+                const curYearDefault = now.getFullYear();
+                // Restore selected month from localStorage if present and not in future
+                let month = curMonthDefault;
+                let year = curYearDefault;
+                try {
+                    const saved = localStorage.getItem('selectedMonth'); // format YYYY-MM
+                    if (saved) {
+                        const [sy, sm] = saved.split('-').map(s=>parseInt(s,10));
+                        if (!isNaN(sy) && !isNaN(sm)) {
+                            if (sy < curYearDefault || (sy === curYearDefault && sm <= curMonthDefault) ){
+                                year = sy; month = sm;
+                            }
+                        }
+                    }
+                } catch(e) {
+                    console.warn('localStorage not available', e);
+                }
                 const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
                 const monthYearEl = document.getElementById('mb-monthyear');
-                if (monthYearEl) monthYearEl.textContent = `${monthNames[now.getMonth()]} ${year}`;
+                // show the currently-selected month/year (restored from localStorage when present)
+                if (monthYearEl) monthYearEl.textContent = `${monthNames[month-1]} ${year}`;
                 // also update the no-budget message month/year span
                 const nobudgetMonthYear = document.getElementById('mb-no-monthyear');
-                if (nobudgetMonthYear) nobudgetMonthYear.textContent = `${monthNames[now.getMonth()]} ${year}`;
+                if (nobudgetMonthYear) nobudgetMonthYear.textContent = `${monthNames[month-1]} ${year}`;
                 // Add cache-busting timestamp to force fresh data
                 const loading = document.getElementById('mb-loading');
                 const content = document.getElementById('mb-content');
@@ -73,6 +101,9 @@
                 const prevBtn = document.getElementById('mb-prev');
                 const nextBtn = document.getElementById('mb-next');
 
+                // Chart.js instance for category breakdown
+                let catChart = null;
+
                 // set max for monthPicker to current month to disable future months in browser UI
                 if (monthPicker) {
                     const nowForMax = new Date();
@@ -84,11 +115,17 @@
                     if (addLink) addLink.href = `/monthly_budget/add?month=${m}&year=${y}`;
                 }
 
+                function persistSelectedMonth(y,m){
+                    try{ localStorage.setItem('selectedMonth', `${String(y).padStart(4,'0')}-${String(m).padStart(2,'0')}`); }catch(e){}
+                }
+
                 function formatMonthPickerValue(y, m){
                     return `${String(y).padStart(4,'0')}-${String(m).padStart(2,'0')}`;
                 }
 
                 async function loadMonth(y, m){
+                    // persist selection
+                    persistSelectedMonth(y,m);
                     // update visible month/year labels and add link
                     if (monthYearEl) monthYearEl.textContent = `${monthNames[m-1]} ${y}`;
                     const nobudgetMonthYear = document.getElementById('mb-no-monthyear');
@@ -124,7 +161,6 @@
                         }
 
                         const spent = j.spent ?? 0;
-                        const planned = j.planned ?? 0;
                         const remaining = (j.remaining_budget !== undefined && j.remaining_budget !== null)
                                             ? j.remaining_budget
                                             : (budget - spent);
@@ -134,7 +170,6 @@
 
                         document.getElementById('mb-budget').textContent = Number(budget).toFixed(2);
                         document.getElementById('mb-spent').textContent = Number(spent).toFixed(2);
-                        document.getElementById('mb-planned').textContent = Number(planned).toFixed(2);
                         document.getElementById('mb-remaining').textContent = Number(remaining).toFixed(2);
 
                         // try to wire up edit/delete links
@@ -165,6 +200,12 @@
                     } catch (err) {
                         loading.textContent = 'Could not load monthly summary';
                         console.error('budget summary fetch error', err);
+                    }
+                    // after loading month data, update category breakdown
+                    try {
+                        await loadCategoryBreakdown(m, y);
+                    } catch (e) {
+                        console.error('category breakdown error', e);
                     }
                 }
 
@@ -243,6 +284,107 @@
 
                 // initial load for current month/year
                 loadMonth(currentYear, currentMonth);
+
+                // Category breakdown helper
+                async function loadCategoryBreakdown(m, y){
+                    const canvas = document.getElementById('cat-pie-canvas');
+                    const nodata = document.getElementById('cat-no-data');
+                    const legend = document.getElementById('cat-legend');
+                    canvas && (canvas.style.display = 'none');
+                    legend && (legend.style.display = 'none');
+                    if (nodata) nodata.textContent = 'Loading...';
+
+                    const url = `/budget/category-breakdown/${m}/${y}?_=${Date.now()}`;
+                    try {
+                        const res = await fetch(url);
+                        if (!res.ok) {
+                            if (nodata) nodata.textContent = 'No data';
+                            return;
+                        }
+                        const j = await res.json();
+                        const cats = j.categories || [];
+                        if (!cats.length) {
+                            if (nodata) nodata.textContent = 'No data';
+                            return;
+                        }
+
+                        const labels = cats.map(c=>c.category || 'Uncategorized');
+                        const data = cats.map(c=>Number(c.spent || 0));
+                        const total = data.reduce((s,v)=>s+v,0);
+                        if (!total) { if (nodata) nodata.textContent='No data'; return; }
+
+                        // prepare colors
+                        const colors = ["#4e79a7","#f28e2b","#e15759","#76b7b2","#59a14f","#edc949","#af7aa1","#ff9da7","#9c755f","#bab0ac"];
+                        const bg = labels.map((_,i)=>colors[i % colors.length]);
+
+                        // create or update Chart.js pie
+                        if (typeof Chart === 'undefined') {
+                            // fallback: simple text
+                            if (nodata) nodata.textContent = 'No data';
+                            return;
+                        }
+
+                        const ctx = canvas.getContext('2d');
+                        if (catChart) { catChart.destroy(); catChart = null; }
+                        catChart = new Chart(ctx, {
+                            type: 'pie',
+                            data: {
+                                labels: labels,
+                                datasets: [{ data: data, backgroundColor: bg }]
+                            },
+                            options: {
+                                responsive: false,
+                                plugins: {
+                                    legend: { position: 'right', labels: { boxWidth:12 } },
+                                    tooltip: { enabled: true }
+                                }
+                            }
+                        });
+
+                        // populate legend HTML (Chart renders its own but we keep a compact textual legend too)
+                        if (legend) {
+                            // build legend entries with a data-index so we can attach click handlers
+                            legend.innerHTML = labels.map((lab,i)=>{
+                                const pct = ((data[i]/total)*100).toFixed(1);
+                                return `<div data-index="${i}" style="padding:4px 0;">` +
+                                        `<span style=\"display:inline-block;width:12px;height:12px;background:${bg[i]};margin-right:6px;border:1px solid #fff;\"></span>` +
+                                        `${lab}: $${Number(data[i]).toFixed(2)} (${pct}%)` +
+                                        `</div>`;
+                            }).join('');
+                            legend.style.display = 'block';
+
+                            // make legend items clickable to toggle chart visibility for that slice
+                            Array.from(legend.querySelectorAll('div[data-index]')).forEach(function(el){
+                                el.style.cursor = 'pointer';
+                                el.addEventListener('click', function(){
+                                    const idx = parseInt(el.getAttribute('data-index'), 10);
+                                    if (!Number.isFinite(idx) || !catChart) return;
+                                    try {
+                                        // toggle chart visibility for the data index
+                                        if (typeof catChart.toggleDataVisibility === 'function') {
+                                            catChart.toggleDataVisibility(idx);
+                                        } else if (catChart.data && catChart.data.datasets && catChart.data.datasets[0] && catChart.getDatasetMeta) {
+                                            // fallback: hide by setting data to 0 (not ideal) — prefer toggleDataVisibility
+                                            const meta = catChart.getDatasetMeta(0);
+                                            meta.data[idx].hidden = !meta.data[idx].hidden;
+                                        }
+                                        // visually mute/unmute the legend entry
+                                        el.style.opacity = (el.style.opacity === '0.5') ? '1' : '0.5';
+                                        catChart.update();
+                                    } catch (e) {
+                                        console.error('legend toggle error', e);
+                                    }
+                                });
+                            });
+                        }
+                        canvas.style.display = 'block';
+                        if (nodata) nodata.textContent = '';
+
+                    } catch (err) {
+                        if (nodata) nodata.textContent = 'No data';
+                        console.error('category breakdown fetch error', err);
+                    }
+                }
             })();
         </script>
 
@@ -291,10 +433,8 @@
                 {% endif %}
             </p>
     
-            <div>
-                <strong>Planned:</strong> ${{ "%.2f"|format(plan.planned_expense) }} |
-                <strong>Actual:</strong> ${{ "%.2f"|format(plan.actual_expense) }} |
-                <strong>Difference:</strong> ${{ "%.2f"|format(plan.planned_expense - plan.actual_expense) }}
+                <div>
+                <strong>Actual:</strong> ${{ "%.2f"|format(plan.actual_expense) }}
             </div>
     
             {% if plan.notes %}
