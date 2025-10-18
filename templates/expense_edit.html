@@ -1,25 +1,50 @@
-{% extends "base.html" %}
-{% block title %}Edit Expense{% endblock %}
-{% block content %}
+{% extends "base.html" %} {% block title %}Edit Expense{% endblock %} {% block
+container %}
 <h2>Edit Expense</h2>
-<form method="post" action="{{ url_for('expense_update', expense_id=doc._id) }}">
+<form
+  method="post"
+  action="{{ url_for('expense_update', expense_id=expense._id) }}"
+>
+  <!-- Change doc to expense -->
   <div>
     <label>Date</label>
-    <input type="date" name="date" value="{{ doc.date|default('') }}">
+    <input
+      type="date"
+      name="date"
+      value="{{ expense.date.strftime('%Y-%m-%d') }}"
+      required
+    />
+    <!-- Change doc to expense -->
   </div>
   <div>
     <label>Amount</label>
-    <input name="amount" type="number" step="0.01" min="0" value="{{ doc.amount }}" required>
+    <input
+      name="amount"
+      type="number"
+      step="0.01"
+      min="0"
+      value="{{ expense.amount }}"
+      required
+    />
+    <!-- Change doc to expense -->
   </div>
   <div>
     <label>Category</label>
-    <input name="category" value="{{ doc.category|default('') }}">
+    <input
+      name="category"
+      value="{{ expense.category }}"
+      placeholder="e.g., Food, Rent"
+    />
+    <!-- Change doc to expense -->
   </div>
   <div>
     <label>Note</label>
-    <textarea name="note">{{ doc.note|default('') }}</textarea>
+    <textarea name="note" placeholder="Optional note">
+{{ expense.note }}</textarea
+    >
+    <!-- Change doc to expense -->
   </div>
-  <button type="submit">Save</button>
+  <button type="submit">Update</button>
   <a href="{{ url_for('expenses_list') }}">Cancel</a>
 </form>
 {% endblock %}

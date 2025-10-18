@@ -184,6 +184,168 @@ def create_app():
             plans = db.plans.find({}).sort("created_at", -1)
         
         return render_template("index.html", plans=plans, search_category=category)
+    
+
+    @app.route("/expenses_list")
+    def expenses_list():
+        """
+        List expenses with optional filters: search (q), category, year+month (ym), and pagination (page).
+        """
+        q = request.args.get("q", "").strip()
+        category = request.args.get("category", "").strip()
+        ym = request.args.get("ym", "").strip()
+        page = _parse_int_or_none(request.args.get("page")) or 1
+        per_page = 10  # Customize how many expenses per page
+
+        query = {}
+
+        # Handle search by note/title
+        if q:
+            query["$or"] = [
+                {"note": {"$regex": q, "$options": "i"}},
+                {"title": {"$regex": q, "$options": "i"}}
+            ]
+
+        # Handle category filter
+        if category:
+            query["category"] = {"$regex": category, "$options": "i"}
+
+        # Handle year-month (ym) filter
+        if ym:
+           
+                y, m = ym.split("-")
+                year = int(y)
+                month = int(m)
+                query["year"] = year
+                query["month"] = month
+                """
+            except ValueError:
+                flash("Invalid date format for ym. Use YYYY-MM.", "warning")
+                """
+
+        # Get total count
+        total_expenses = db.expenses.count_documents(query)
+        total_pages = (total_expenses + per_page - 1) // per_page
+
+        # Fetch expenses (paged)
+        expenses = db.expenses.find(query)\
+            .sort("date", -1)\
+            .skip((page - 1) * per_page)\
+            .limit(per_page)
+
+        return render_template(
+            "expenses.html",
+            expenses=expenses,
+            q=q,
+            category=category,
+            ym=ym,
+            page=page,
+            total_pages=total_pages
+        )
+    @app.route("/expense_new", methods=["GET"])
+    def expense_new():
+        """
+        Display the form to add a new expense.
+        """
+        return render_template("expense_new.html")   
+    
+      
+
+    @app.route("/expense_create", methods=["POST"])
+    def expense_create():
+        """
+        Handle the form submission to create a new expense.
+        """
+       
+            # Get form data
+        date_str = request.form.get("date")
+        amount = float(request.form.get("amount"))
+        category = request.form.get("category", "").strip()
+        note = request.form.get("note", "").strip()
+            
+        # Parse the date
+        from datetime import datetime
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+            
+        # Create expense document
+        expense_doc = {
+                "date": date_obj,
+                "year": date_obj.year,
+                "month": date_obj.month,
+                "amount": amount,
+                "category": category,
+                "note": note,
+                "title": category  # You can customize this
+            }
+            
+        # Insert into database
+        db.expenses.insert_one(expense_doc)
+       
+        return redirect(url_for("expenses_list"))
+        """
+        except ValueError as e:
+            flash(f"Invalid input: {str(e)}", "error")
+            return redirect(url_for("expense_new"))
+        except Exception as e:
+            flash(f"Error creating expense: {str(e)}", "error")
+            return redirect(url_for("expense_new"))
+        """
+
+    @app.route("/expense/edit/<expense_id>", methods=["GET", "POST"])
+    def expense_edit(expense_id):
+        from bson.objectid import ObjectId
+        
+        if request.method == "POST":
+            # Handle update
+            from datetime import datetime
+            date_str = request.form.get("date")
+            date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+            
+            db.expenses.update_one(
+                {"_id": ObjectId(expense_id)},
+                {"$set": {
+                    "date": date_obj,
+                    "year": date_obj.year,
+                    "month": date_obj.month,
+                    "amount": float(request.form.get("amount")),
+                    "category": request.form.get("category", "").strip(),
+                    "note": request.form.get("note", "").strip(),
+                }}
+            )
+            return redirect(url_for("expenses_list"))
+    
+         # GET: show edit form
+        expense = db.expenses.find_one({"_id": ObjectId(expense_id)})
+        return render_template("expense_edit.html", expense=expense)
+    @app.route("/expense/update/<expense_id>", methods=["POST"])
+    def expense_update(expense_id):
+        from bson.objectid import ObjectId
+        from datetime import datetime
+        
+        date_str = request.form.get("date")
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+        
+        db.expenses.update_one(
+            {"_id": ObjectId(expense_id)},
+            {"$set": {
+                "date": date_obj,
+                "year": date_obj.year,
+                "month": date_obj.month,
+                "amount": float(request.form.get("amount")),
+                "category": request.form.get("category", "").strip(),
+                "note": request.form.get("note", "").strip(),
+                "title": request.form.get("category", "").strip() or "Expense"
+            }}
+        )
+        return redirect(url_for("expenses_list"))
+    @app.route("/expense/delete/<expense_id>",methods=["GET", "POST"])
+    def expense_delete(expense_id):
+        """
+        Delete an expense and redirect to expenses list.
+        """
+        from bson.objectid import ObjectId
+        db.expenses.delete_one({"_id": ObjectId(expense_id)})
+        return redirect(url_for("expenses_list"))
 
 
     # -----------------------
