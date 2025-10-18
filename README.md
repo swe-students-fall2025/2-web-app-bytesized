@@ -101,7 +101,9 @@ Our app empowers users to plan and track spending on mobile quickly and clearly 
 
 ## Steps necessary to run the software
 
-## Steps necessary to run the software
+### 0. Set up docker
+install and run docker desktop
+create a dockerhub account
 
 ### 1. Create and activate a virtual environment
 
@@ -136,8 +138,10 @@ FLASK_APP=app.py
 FLASK_ENV=development
 FLASK_PORT=5000
 
+
 > ⚠️ The `.env` file must **not** be pushed to GitHub, as it contains private credentials.  
 > Only commit `env.example` with dummy values.
+> if you use a database, you should change the URI to 
 
 ---
 
