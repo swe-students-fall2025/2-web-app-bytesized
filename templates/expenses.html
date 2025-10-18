@@ -18,7 +18,7 @@ container %}
     placeholder="Category…"
     value="{{ category|default('') }}"
   />
-  <input type="month" name="ym" value="{{ ym|default('') }}" />
+  <input type="month" name="ym" placeholder="e.g. 2025-10" value="{{ ym|default('') }}" />
   <button type="submit">Search</button>
   <a href="{{ url_for('expenses_list') }}">Clear</a>
 </form>
