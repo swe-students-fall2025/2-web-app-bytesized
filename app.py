@@ -360,7 +360,10 @@ def create_app():
         (If you prefer upsert/replace, it's easy to change.)
         """
         if request.method == "GET":
-            return render_template("add_monthly_budget.html")
+            # allow prefilling month/year via query params (e.g. ?month=3&year=2025)
+            month_q = _parse_int_or_none(request.args.get('month'))
+            year_q = _parse_int_or_none(request.args.get('year'))
+            return render_template("add_monthly_budget.html", prefill_month=month_q, prefill_year=year_q)
 
         # POST
         budget_raw = request.form.get("budget", "").strip()

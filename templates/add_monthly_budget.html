@@ -32,14 +32,47 @@
   </form>
 
   <script>
-    // Auto-fill current month and year
+    // Auto-fill current month and year, or use server-provided prefill values
     (function(){
+      const serverMonth = {{ prefill_month|default('null') }};
+      const serverYear = {{ prefill_year|default('null') }};
       const now = new Date();
-      const month = now.getMonth() + 1; // JS months are 0-based
-      const year = now.getFullYear();
-      
-      document.getElementById('monthInput').value = month;
-      document.getElementById('yearInput').value = year;
+      const curMonth = now.getMonth() + 1;
+      const curYear = now.getFullYear();
+
+      if (serverMonth && serverYear) {
+        // clamp server values to not be in the future
+        let sm = parseInt(serverMonth, 10);
+        let sy = parseInt(serverYear, 10);
+        if (isNaN(sm) || isNaN(sy)) {
+          sm = curMonth; sy = curYear;
+        }
+        if (sy > curYear || (sy === curYear && sm > curMonth)) {
+          sm = curMonth; sy = curYear;
+        }
+        document.getElementById('monthInput').value = sm;
+        document.getElementById('yearInput').value = sy;
+        return;
+      }
+
+      document.getElementById('monthInput').value = curMonth;
+      document.getElementById('yearInput').value = curYear;
+    })();
+
+    // Prevent submitting a future month/year
+    (function(){
+      const form = document.getElementById('addBudgetForm');
+      form && form.addEventListener('submit', function(e){
+        const mi = parseInt(document.getElementById('monthInput').value, 10);
+        const yi = parseInt(document.getElementById('yearInput').value, 10);
+        const now = new Date();
+        const curM = now.getMonth() + 1;
+        const curY = now.getFullYear();
+        if (yi > curY || (yi === curY && mi > curM)) {
+          e.preventDefault();
+          alert('Cannot create a monthly budget for a future month. Please select the current month or earlier.');
+        }
+      });
     })();
   </script>
 
