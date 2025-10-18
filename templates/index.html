@@ -10,7 +10,7 @@
         <!-- Monthly Budget Overview Card -->
         <section id="monthly-budget-overview" style="margin:12px 0;">
             <h3>Monthly Budget Overview</h3>
-            <div id="monthlyBudgetCard" style="border:1px solid #ccc; padding:12px; max-width:520px; position:relative;">
+            <div id="monthlyBudgetCard" class="card small" style="position:relative;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div style="display:flex; gap:8px; align-items:center;">
                         <button id="mb-prev" aria-label="Previous month">◀ Prev</button>
@@ -42,15 +42,27 @@
             </div>
         </section>
 
-        <!-- Category breakdown pie chart card -->
-        <section id="category-breakdown" style="margin:12px 0;">
-            <h3>Expenses by Category (month)</h3>
-            <div id="cat-card" style="width:320px; height:320px; border:1px solid #ccc; display:flex; align-items:center; justify-content:center; position:relative;">
-                <canvas id="cat-pie-canvas" width="280" height="280" style="display:none;"></canvas>
-                <div id="cat-no-data" style="text-align:center; color:#666;">Loading...</div>
-                <div id="cat-legend" style="position:absolute; right:8px; top:8px; max-width:140px; font-size:12px; display:none;"></div>
-            </div>
-        </section>
+        <div class="cards-row">
+            <!-- Category breakdown pie chart card -->
+            <section id="category-breakdown" style="margin:12px 0;">
+                <h3 class="card-title">Expenses by Category (month)</h3>
+                <div id="cat-card" class="card small" style="display:flex; align-items:center; justify-content:center; position:relative;">
+                    <canvas id="cat-pie-canvas" width="280" height="280" style="display:none;" class="chart-canvas"></canvas>
+                    <div id="cat-no-data" style="text-align:center; color:#666;">Loading...</div>
+                    <div id="cat-legend" class="legend-compact" style="position:absolute; right:8px; top:8px; max-width:140px; font-size:12px; display:none;"></div>
+                </div>
+            </section>
+
+        <!-- Daily expenses trend (30 days) -->
+            <!-- Daily expenses trend (30 days) -->
+            <section id="daily-trend" style="margin:12px 0;">
+                <h3 class="card-title">30-day Expense Trend</h3>
+                <div id="trend-card" class="card medium">
+                    <canvas id="trend-canvas" width="600" height="200" style="display:none;" class="chart-canvas"></canvas>
+                    <div id="trend-no-data" style="color:#666; text-align:center; padding:20px;">Loading...</div>
+                </div>
+            </section>
+        </div>
 
     <!-- Placeholders for charts (future) -->
     <!-- Add line chart for expenses over time here -->
@@ -103,6 +115,8 @@
 
                 // Chart.js instance for category breakdown
                 let catChart = null;
+                // Chart.js instance for trend line
+                let trendChart = null;
 
                 // set max for monthPicker to current month to disable future months in browser UI
                 if (monthPicker) {
@@ -124,6 +138,8 @@
                 }
 
                 async function loadMonth(y, m){
+                    // ensure global currentMonth/currentYear reflect this load
+                    currentMonth = m; currentYear = y;
                     // persist selection
                     persistSelectedMonth(y,m);
                     // update visible month/year labels and add link
@@ -204,6 +220,7 @@
                     // after loading month data, update category breakdown
                     try {
                         await loadCategoryBreakdown(m, y);
+                        await loadDailyTrend(m, y);
                     } catch (e) {
                         console.error('category breakdown error', e);
                     }
@@ -287,6 +304,8 @@
 
                 // Category breakdown helper
                 async function loadCategoryBreakdown(m, y){
+                    // allow callers to omit params and use current selection
+                    if (typeof m === 'undefined' || typeof y === 'undefined') { m = currentMonth; y = currentYear; }
                     const canvas = document.getElementById('cat-pie-canvas');
                     const nodata = document.getElementById('cat-no-data');
                     const legend = document.getElementById('cat-legend');
@@ -383,6 +402,72 @@
                     } catch (err) {
                         if (nodata) nodata.textContent = 'No data';
                         console.error('category breakdown fetch error', err);
+                    }
+                }
+
+                // Load 30-day daily totals and render trend line
+                async function loadDailyTrend(m, y){
+                    // allow callers to omit params and use current selection
+                    if (typeof m === 'undefined' || typeof y === 'undefined') { m = currentMonth; y = currentYear; }
+                    const canvas = document.getElementById('trend-canvas');
+                    const nodata = document.getElementById('trend-no-data');
+                    canvas && (canvas.style.display = 'none');
+                    if (nodata) nodata.textContent = 'Loading...';
+
+                    const url = `/budget/daily_totals/${m}/${y}?_=${Date.now()}`;
+                    try {
+                        const res = await fetch(url);
+                        if (!res.ok) {
+                            if (nodata) nodata.textContent = 'No data';
+                            return;
+                        }
+                        const j = await res.json();
+                        const days = j.days || [];
+                        if (!days.length) {
+                            if (nodata) nodata.textContent = 'No data';
+                            return;
+                        }
+
+                        const labels = days.map(d=>d.date.split('-').pop()); // day of month
+                        const data = days.map(d=>Number(d.total || 0));
+
+                        if (typeof Chart === 'undefined') {
+                            if (nodata) nodata.textContent = 'No chart library';
+                            return;
+                        }
+
+                        const ctx = canvas.getContext('2d');
+                        if (trendChart) { trendChart.destroy(); trendChart = null; }
+                        trendChart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    label: 'Daily total',
+                                    data: data,
+                                    borderColor: '#4e79a7',
+                                    backgroundColor: 'rgba(78,121,167,0.08)',
+                                    fill: true,
+                                    tension: 0.2,
+                                    pointRadius: 3
+                                }]
+                            },
+                            options: {
+                                responsive: false,
+                                scales: {
+                                    x: { display: true, title: { display: true, text: 'Day' } },
+                                    y: { display: true, title: { display: true, text: 'Amount ($)' }, beginAtZero: true }
+                                },
+                                plugins: { legend: { display: false }, tooltip: { enabled: true } }
+                            }
+                        });
+
+                        canvas.style.display = 'block';
+                        if (nodata) nodata.textContent = '';
+
+                    } catch (err) {
+                        if (nodata) nodata.textContent = 'No data';
+                        console.error('daily trend fetch error', err);
                     }
                 }
             })();

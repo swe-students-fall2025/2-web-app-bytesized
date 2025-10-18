@@ -665,6 +665,45 @@ def create_app():
         })
 
 
+    @app.route("/budget/daily_totals/<int:month>/<int:year>")
+    def budget_daily_totals(month, year):
+        """
+        Returns JSON: {month, year, days: [{date: 'YYYY-MM-DD', total: float}, ...]}
+        The period returned starts at the first day of the given month and includes 30 consecutive days.
+        Days with no expenses are returned with total 0.0.
+        """
+        # compute start and end (30-day window starting at the 1st of the month)
+        start = datetime.datetime(year, month, 1)
+        end = start + datetime.timedelta(days=30)
+
+        # aggregate totals by year/month/day within the window
+        agg = list(db.expenses.aggregate([
+            {"$match": {"date": {"$gte": start, "$lt": end}}},
+            {"$group": {
+                "_id": {"y": {"$year": "$date"}, "m": {"$month": "$date"}, "d": {"$dayOfMonth": "$date"}},
+                "total": {"$sum": "$amount"}
+            }},
+            {"$project": {"_id": 0, "year": "$_id.y", "month": "$_id.m", "day": "$_id.d", "total": 1}},
+            {"$sort": {"year": 1, "month": 1, "day": 1}}
+        ]))
+
+        # map results by date
+        totals = {}
+        for it in agg:
+            try:
+                d = datetime.date(int(it["year"]), int(it["month"]), int(it["day"]))
+                totals[d] = float(it.get("total", 0.0))
+            except Exception:
+                continue
+
+        days = []
+        for i in range(30):
+            dt = (start + datetime.timedelta(days=i)).date()
+            days.append({"date": dt.isoformat(), "total": float(totals.get(dt, 0.0))})
+
+        return jsonify({"month": month, "year": year, "days": days})
+
+
     @app.route('/settings')
     def settings():
         """
