@@ -4,7 +4,7 @@
 
 [Jasmine Zhu](https://github.com/jasminezjr)
 [Athena Luo](https://github.com/funfig16)
-[Esther Zheng](https://github.com/yf2685-beep)
+[Esther Feng](https://github.com/yf2685-beep)
 [Zeba Shafi](https://github.com/Zeba-Shafi)
 [Harrison](https://github.com/hoc2006-code)
 
