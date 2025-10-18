@@ -14,7 +14,7 @@ Our app empowers users to plan and track spending on mobile quickly and clearly 
 
 ## User stories
 
-- [Full Project Backlog (Issues)](https://github.com/nyu-software-engineering/flask-pymongo-web-app-example.git)
+- [Full Project Backlog (Issues)](https://github.com/orgs/swe-students-fall2025/projects/7/views/1)
 
 <!-- 1. **View planned spending**
    - As a user, I want to see my **planned spending list** so that I can review my budget.
@@ -107,6 +107,8 @@ Our app empowers users to plan and track spending on mobile quickly and clearly 
 `git clone https://github.com/swe-students-fall2025/2-web-app-bytesized.git`
 
 **Second,** change your directory to 2-web-app-bytesized
+
+**Third,** place the `.env` file into the 2-web-app-bytesized folder. The file is shared in the team's channel.
 
 ### 2. Setups
 
