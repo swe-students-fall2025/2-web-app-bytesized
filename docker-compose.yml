@@ -2,27 +2,24 @@ services:
   web:
     build: .
     ports:
-      - "5001:5000"             # if 5000 is busy on your Mac, change to "5001:5000"
+      - "5002:5000"       # 浏览器访问 http://localhost:5002
     environment:
-      - FLASK_APP=app.py
-      - FLASK_ENV=development
-      - MONGO_DBNAME=bytesized
-      - MONGO_URI=mongodb://admin:secret@mongodb:27017/?authSource=admin
-    env_file:
-      - .env                    # values here can override/augment the above
+      FLASK_APP: app.py
+      FLASK_ENV: development
+      MONGO_DBNAME: budget_app
+      
+      MONGO_URI: "mongodb+srv://yuxuanf2005_db_user:VaqrvDySP1LPLlHg@cluster0.rcxky03.mongodb.net/budget_app?retryWrites=true&w=majority&appName=Cluster0"
+    
     depends_on:
       - mongodb
-    # For live-reload during dev (optional, if your Dockerfile runs `flask run --reload`)
-    # volumes:
-    #   - .:/app
 
   mongodb:
     image: mongo:6
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=secret
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: secret
     ports:
-      - "27018:27017"           # optional: expose for Compass on your Mac
+      - "27019:27017"
     volumes:
       - mongodb-data:/data/db
 
