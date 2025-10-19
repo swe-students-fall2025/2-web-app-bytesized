@@ -2,16 +2,19 @@
 <html>
   <head>
     <title>Budget Tracker App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='global2.css') }}" />
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
   </head>
   <body>
     <div class="container">
-      <header>
-        <h1>💰 Budget Tracker</h1>
+      <header style="margin-bottom: var(--space-xl);">
+        <h1><i data-lucide="wallet"></i> Budget Tracker</h1>
         <nav>
-          <a href="{{ url_for('home')}}">Home</a>
-          <a href="{{ url_for('expenses_list')}}">Expenses</a>
-          <a href="{{ url_for('settings')}}">Settings</a>
+          <a href="{{ url_for('home')}}"><i data-lucide="home"></i> Home</a>
+          <a href="{{ url_for('expenses_list')}}"><i data-lucide="receipt"></i> Expenses</a>
+          <a href="{{ url_for('settings')}}"><i data-lucide="settings"></i> Settings</a>
         </nav>
       </header>
       {# Flash messages area #} {% with messages =
@@ -45,5 +48,17 @@
         <p>&copy; 2025 Budget Tracker. All rights reserved.</p>
       </footer>
     </div>
+    
+    <!-- Initialize Lucide Icons and Theme -->
+    <script>
+      // Initialize theme before page renders to prevent flash
+      (function() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      })();
+      
+      // Initialize Lucide Icons
+      lucide.createIcons();
+    </script>
   </body>
 </html>

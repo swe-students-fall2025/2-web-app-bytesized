@@ -1,47 +1,55 @@
 {% extends "base.html" %} {% block title %}Expenses{% endblock %} {% block
 container %}
-<h2>Expenses</h2>
+<h2><i data-lucide="receipt"></i> Expenses</h2>
 
 <!-- Search Existing expenses -->
 <form
   method="get"
   action="{{ url_for('expenses_list') }}"
-  style="margin-bottom: 12px"
+  style="margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;"
 >
   <input
     name="q"
     placeholder="Search notes/title…"
     value="{{ q|default('') }}"
+    style="flex: 1 1 200px; height: 2.5rem; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); font-size: 0.875rem; font-family: inherit;"
   />
   <input
     name="category"
     placeholder="Category…"
     value="{{ category|default('') }}"
+    style="flex: 1 1 150px; height: 2.5rem; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); font-size: 0.875rem; font-family: inherit;"
   />
-  <input type="month" name="ym" placeholder="e.g. 2025-10" value="{{ ym|default('') }}" />
-  <button type="submit">Search</button>
-  <a href="{{ url_for('expenses_list') }}">Clear</a>
+  <input 
+    type="month" 
+    name="ym" 
+    placeholder="e.g. 2025-10" 
+    value="{{ ym|default('') }}" 
+    style="flex: 1 1 150px; height: 2.5rem; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); font-size: 0.875rem; font-family: inherit; cursor: pointer;"
+  />
+  <button type="submit" style="height: 2.5rem; white-space: nowrap;"><i data-lucide="search"></i> Search</button>
+  <a href="{{ url_for('expenses_list') }}" style="height: 2.5rem; display: inline-flex; align-items: center;"><i data-lucide="x"></i> Clear</a>
 </form>
 
 <!-- Add new expenses -->
 
-<p><a href="{{ url_for('expense_new') }}">+ Add Expense</a></p>
+<p><a href="{{ url_for('expense_new') }}"><i data-lucide="plus-circle"></i> Add Expense</a></p>
 
 <!-- Display Existing expenses -->
 
 <ul>
   {% for e in expenses %}
   <li style="margin: 8px 0">
-    {{ e.date or (e.year ~ '-' ~ e.month ~ '-' ~ e.day) }} — ${{ e.amount }} —
+    {{ e.date or (e.year ~ '-' ~ e.month ~ '-' ~ e.day) }} — ${{ '%.2f' | format(e.amount) }} —
     {{ e.category or 'uncategorized' }}
     <em>{{ e.note }}</em>
-    <a href="{{ url_for('expense_edit', expense_id=e._id) }}">Edit</a>
+    <a href="{{ url_for('expense_edit', expense_id=e._id) }}"><i data-lucide="pencil"></i> Edit</a>
     <form
       method="post"
       action="{{ url_for('expense_delete', expense_id=e._id) }}"
       style="display: inline"
     >
-      <button type="submit">Delete</button>
+      <button type="submit"><i data-lucide="trash-2"></i> Delete</button>
     </form>
   </li>
   {% else %}
@@ -54,14 +62,14 @@ container %}
   {% if page > 1 %}
   <a
     href="{{ url_for('expenses_list', page=page-1, q=q, category=category, ym=ym) }}"
-    >Prev</a
+    ><i data-lucide="chevron-left"></i> Prev</a
   >
   {% endif %}
   <span> Page {{ page }} / {{ total_pages }} </span>
   {% if page < total_pages %}
   <a
     href="{{ url_for('expenses_list', page=page+1, q=q, category=category, ym=ym) }}"
-    >Next</a
+    >Next <i data-lucide="chevron-right"></i></a
   >
   {% endif %}
 </nav>

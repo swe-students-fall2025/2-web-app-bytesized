@@ -1,6 +1,84 @@
 {% extends 'base.html' %}
 
 {% block container %}
-  <h2>App Settings</h2>
-  <p>This is a placeholder for application settings. Add controls here to manage configuration, secrets, or feature flags.</p>
+
+  <h2><i data-lucide="settings"></i> App Settings</h2>
+  <p>Manage your app preferences and configuration.</p>
+  
+  <div class="section">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i data-lucide="palette"></i> Appearance</h3>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label for="themeToggle"><i data-lucide="moon"></i> Dark Mode</label>
+          <p class="text-muted" style="font-size: 0.875rem; margin-bottom: var(--space-md);">
+            Switch between light and dark theme for better viewing comfort.
+          </p>
+          <div style="display: flex; align-items: center; gap: var(--space-md);">
+            <button type="button" id="themeToggleBtn" class="btn-secondary" style="min-width: 120px;">
+              <i data-lucide="moon" id="themeIconBtn"></i>
+              <span id="themeLabel">Dark Mode</span>
+            </button>
+            <span class="chip" id="themeStatus">Light Theme Active</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <div class="card muted">
+      <div class="card-header">
+        <h3 class="card-title"><i data-lucide="info"></i> About</h3>
+      </div>
+      <div class="card-body">
+        <p><strong>Budget Buddy</strong></p>
+        <p class="text-muted">Version 1.0.0</p>
+        <p class="text-muted">A simple, mobile-first web app to track your monthly budget</p>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Dark mode toggle functionality for settings page
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIconBtn = document.getElementById('themeIconBtn');
+    const themeLabel = document.getElementById('themeLabel');
+    const themeStatus = document.getElementById('themeStatus');
+    const html = document.documentElement;
+    
+    // Initialize theme state
+    function updateThemeUI(theme) {
+      if (theme === 'dark') {
+        themeIconBtn.setAttribute('data-lucide', 'sun');
+        themeLabel.textContent = 'Light Mode';
+        themeStatus.textContent = 'Dark Theme Active';
+        themeStatus.className = 'chip chip-dark';
+      } else {
+        themeIconBtn.setAttribute('data-lucide', 'moon');
+        themeLabel.textContent = 'Dark Mode';
+        themeStatus.textContent = 'Light Theme Active';
+        themeStatus.className = 'chip chip-primary';
+      }
+      // Reinitialize icons
+      lucide.createIcons();
+    }
+    
+    // Get current theme
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    html.setAttribute('data-theme', currentTheme);
+    updateThemeUI(currentTheme);
+    
+    // Toggle theme on button click
+    themeToggleBtn.addEventListener('click', () => {
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      updateThemeUI(newTheme);
+    });
+  </script>
 {% endblock %}

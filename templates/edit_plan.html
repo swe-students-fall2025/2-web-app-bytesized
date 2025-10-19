@@ -1,51 +1,51 @@
 {% extends 'base.html' %} 
 
 {% block container %}
-<h2>Edit Budget Plan</h2>
+<h2><i data-lucide="pencil"></i> Edit Budget Plan</h2>
 <form method="POST" action="{{ url_for('edit_plan', plan_id=doc._id) }}">
     
     <div>
-        <label>Title: *</label>
+        <label><i data-lucide="file-text"></i> Title: *</label>
         <input type="text" name="title" value="{{ doc.title }}" required />
     </div>
     
     <!-- Planned expense removed: server stores actual_expense only -->
     
     <div>
-        <label>Actual Expense ($):</label>
+        <label><i data-lucide="dollar-sign"></i> Actual Expense ($):</label>
         <input type="number" name="actual_expense" step="0.01" min="0" 
-               value="{{ doc.actual_expense }}" />
+               value="{{ '%.2f' | format(doc.actual_expense) }}" />
     </div>
     
     <div>
-        <label>Day:</label>
+        <label><i data-lucide="calendar"></i> Day:</label>
         <input type="number" name="day" min="1" max="31" 
                value="{{ doc.day if doc.day else '' }}" />
     </div>
     
     <div>
-        <label>Month:</label>
+        <label><i data-lucide="calendar"></i> Month:</label>
         <input type="number" name="month" min="1" max="12" 
                value="{{ doc.month if doc.month else '' }}" />
     </div>
     
     <div>
-        <label>Year:</label>
+        <label><i data-lucide="calendar"></i> Year:</label>
         <input type="number" name="year" min="2020" max="2030" 
                value="{{ doc.year if doc.year else '' }}" />
     </div>
     
     <div>
-        <label>Category:</label>
+        <label><i data-lucide="tag"></i> Category:</label>
         <input type="text" name="category" value="{{ doc.category }}" />
     </div>
     
     <div>
-        <label>Notes:</label>
+        <label><i data-lucide="file-text"></i> Notes:</label>
         <textarea name="notes">{{ doc.notes }}</textarea>
     </div>
     
     <input type="submit" value="Save Changes" />
-    <a href="{{ url_for('home') }}">Cancel</a>
+    <a href="{{ url_for('home') }}"><i data-lucide="x"></i> Cancel</a>
 </form>
 {% endblock %}

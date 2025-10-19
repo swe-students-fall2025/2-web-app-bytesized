@@ -1,32 +1,32 @@
 {% extends 'base.html' %}
 
 {% block container %}
-  <h2>Add Monthly Budget</h2>
+  <h2><i data-lucide="plus-circle"></i> Add Monthly Budget</h2>
   <p>Use this form to create a monthly budget. Note: multiple budgets for the same month/year are allowed (history preserved).</p>
 
   <form method="POST" action="{{ url_for('add_monthly_budget') }}" id="addBudgetForm">
     <div>
-      <label>Budget ($): *</label>
+      <label><i data-lucide="dollar-sign"></i> Budget ($): *</label>
       <input type="number" name="budget" step="0.01" min="0" required />
     </div>
 
     <div>
-      <label>Month (1-12): *</label>
+      <label><i data-lucide="calendar"></i> Month (1-12): *</label>
       <input type="number" name="month" id="monthInput" min="1" max="12" required />
     </div>
 
     <div>
-      <label>Year: *</label>
+      <label><i data-lucide="calendar"></i> Year: *</label>
       <input type="number" name="year" id="yearInput" min="2000" max="2100" required />
     </div>
 
     <div>
-      <label>Notes:</label>
+      <label><i data-lucide="file-text"></i> Notes:</label>
       <textarea name="notes" placeholder="Optional notes"></textarea>
     </div>
 
     <div style="margin-top:12px;">
-      <a href="{{ url_for('home') }}">Cancel</a>
+      <a href="{{ url_for('home') }}"><i data-lucide="x"></i> Cancel</a>
       <input type="submit" value="Create Budget" />
     </div>
   </form>
