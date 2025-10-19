@@ -642,8 +642,8 @@ def create_app():
         agg = list(db.expenses.aggregate([
             {"$match": {"month": month, "year": year}},
             {"$group": {
-                "_id": "$category",
-                "spent": {"$sum": "$amount"},  #amount
+                "_id": {"$toLower": "$category"},  # toLower
+                "spent": {"$sum": "$amount"},
                 "count": {"$sum": 1}
             }},
             {"$sort": {"spent": -1}}
@@ -653,7 +653,7 @@ def create_app():
         categories = []
         for item in agg:
             categories.append({
-                "category": item["_id"] if item["_id"] else "Uncategorized",
+                "category": item["_id"].title(),  # capitalize for display
                 "spent": float(item["spent"]),
                 "count": item["count"]
             })
