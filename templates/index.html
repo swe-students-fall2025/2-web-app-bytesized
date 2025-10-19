@@ -2,42 +2,60 @@
 
 {% block container %}
 
-    <h2>Welcome to Your Budget Tracker!</h2>
+    <h2><i data-lucide="wallet"></i> Welcome to Your Budget Tracker!</h2>
     <p>Empower users to plan and track spending on mobile quickly and clearly!</p>
 
     <!---Monthly Budget Overview-->
 
         <!-- Monthly Budget Overview Card -->
         <section id="monthly-budget-overview" style="margin:12px 0;">
-            <h3>Monthly Budget Overview</h3>
-            <div id="monthlyBudgetCard" class="card small" style="position:relative;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="display:flex; gap:8px; align-items:center;">
-                        <button id="mb-prev" aria-label="Previous month">◀ Prev</button>
-                        <input type="month" id="mb-select-month" aria-label="Select month" />
-                        <button id="mb-next" aria-label="Next month">Next ▶</button>
-                        <p id="mb-monthyear" style="margin:0 0 8px 0; font-weight:600; color:#333;"></p>
-                    </div>
-                    <div id="mb-actions" style="display:none;">
-                        <a id="mb-edit-link" href="#" style="margin-right:8px;">
-                            <button id="mb-edit-btn" aria-label="Edit monthly budget">Edit</button>
-                        </a>
-                        <a id="mb-delete-link" href="#" onclick="return confirm('Are you sure you want to delete this monthly budget?');">
-                            <button id="mb-delete-btn" aria-label="Delete monthly budget" style="background:#dc3545; color:white; border:1px solid #dc3545;">Delete</button>
-                        </a>
+            <h3><i data-lucide="calendar-range"></i> Monthly Budget Overview</h3>
+            <div id="monthlyBudgetCard" class="card" style="position:relative; width:100%;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: var(--space-md);">
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap: wrap;">
+                        <button id="mb-prev" aria-label="Previous month"><i data-lucide="chevron-left"></i> Prev</button>
+                        <input type="month" id="mb-select-month" aria-label="Select month" style="height: 2.5rem; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); font-size: 0.875rem; font-family: inherit; cursor: pointer;" />
+                        <button id="mb-next" aria-label="Next month">Next <i data-lucide="chevron-right"></i></button>
+                        <p id="mb-monthyear" style="margin:0; font-weight:600; color:var(--text);"></p>
                     </div>
                 </div>
-                <div id="mb-loading">Loading monthly summary...</div>
+                <div id="mb-loading"><i data-lucide="loader"></i> Loading monthly summary...</div>
 
                 <div id="mb-content" style="display:none;">
-                    <p><strong>Budget:</strong> $<span id="mb-budget">0.00</span></p>
-                    <p><strong>Spent:</strong> $<span id="mb-spent">0.00</span></p>
-                    <p><strong>Remaining:</strong> $<span id="mb-remaining">0.00</span></p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-lg); margin-bottom: var(--space-md);">
+                        <div style="text-align: center; padding: var(--space-md); border-radius: var(--radius); background: var(--muted-surface);">
+                            <div style="font-size: 0.875rem; color: var(--muted-text); margin-bottom: var(--space-xs);">
+                                <i data-lucide="wallet"></i> Budget
+                            </div>
+                            <div style="font-size: 1.75rem; font-weight: 700; color: var(--text);">$<span id="mb-budget">0.00</span></div>
+                        </div>
+                        <div style="text-align: center; padding: var(--space-md); border-radius: var(--radius); background: var(--muted-surface);">
+                            <div style="font-size: 0.875rem; color: var(--muted-text); margin-bottom: var(--space-xs);">
+                                <i data-lucide="credit-card"></i> Spent
+                            </div>
+                            <div style="font-size: 1.75rem; font-weight: 700; color: var(--text);">$<span id="mb-spent">0.00</span></div>
+                        </div>
+                        <div style="text-align: center; padding: var(--space-md); border-radius: var(--radius); background: var(--muted-surface);">
+                            <div style="font-size: 0.875rem; color: var(--muted-text); margin-bottom: var(--space-xs);">
+                                <i data-lucide="piggy-bank"></i> Remaining
+                            </div>
+                            <div style="font-size: 1.75rem; font-weight: 700; color: var(--accent);">$<span id="mb-remaining">0.00</span></div>
+                        </div>
+                    </div>
+                    
+                    <div id="mb-actions" style="display:flex; gap: var(--space-sm); padding-top: var(--space-md); border-top: 1px solid var(--divider); justify-content: flex-end;">
+                        <a id="mb-edit-link" href="#">
+                            <button id="mb-edit-btn" class="btn-icon btn-ghost" aria-label="Edit monthly budget"><i data-lucide="pencil"></i></button>
+                        </a>
+                        <a id="mb-delete-link" href="#" onclick="return confirm('Are you sure you want to delete this monthly budget?');">
+                            <button id="mb-delete-btn" class="btn-icon btn-ghost" aria-label="Delete monthly budget" style="color: var(--danger);"><i data-lucide="trash-2"></i></button>
+                        </a>
+                    </div>
                 </div>
 
                 <div id="mb-no-budget" style="display:none; text-align:center; padding:20px 0;">
                     <p id="mb-no-budget-text" style="color:#666; margin-bottom:12px;">No monthly budget set for <span id="mb-no-monthyear"></span>.</p>
-                    <a id="mb-add-link" href="{{ url_for('add_monthly_budget') }}"><button>New Monthly Budget</button></a>
+                    <a id="mb-add-link" href="{{ url_for('add_monthly_budget') }}"><button><i data-lucide="plus-circle"></i> New Monthly Budget</button></a>
                 </div>
             </div>
         </section>
@@ -45,10 +63,10 @@
         <div class="cards-row">
             <!-- Category breakdown pie chart card -->
             <section id="category-breakdown" style="margin:12px 0;">
-                <h3 class="card-title">Expenses by Category (month)</h3>
+                <h3 class="card-title"><i data-lucide="pie-chart"></i> Expenses by Category (month)</h3>
                 <div id="cat-card" class="card small" style="display:flex; align-items:center; justify-content:center; position:relative;">
                     <canvas id="cat-pie-canvas" width="280" height="280" style="display:none;" class="chart-canvas"></canvas>
-                    <div id="cat-no-data" style="text-align:center; color:#666;">Loading...</div>
+                    <div id="cat-no-data" style="text-align:center; color:#666;"><i data-lucide="loader" class="spin"></i> Loading...</div>
                     <div id="cat-legend" class="legend-compact" style="position:absolute; right:8px; top:8px; max-width:140px; font-size:12px; display:none;"></div>
                 </div>
             </section>
@@ -56,10 +74,10 @@
         <!-- Daily expenses trend (30 days) -->
             <!-- Daily expenses trend (30 days) -->
             <section id="daily-trend" style="margin:12px 0;">
-                <h3 class="card-title">30-day Expense Trend</h3>
+                <h3 class="card-title"><i data-lucide="trending-up"></i> 30-day Expense Trend</h3>
                 <div id="trend-card" class="card medium">
                     <canvas id="trend-canvas" width="600" height="200" style="display:none;" class="chart-canvas"></canvas>
-                    <div id="trend-no-data" style="color:#666; text-align:center; padding:20px;">Loading...</div>
+                    <div id="trend-no-data" style="color:#666; text-align:center; padding:20px;"><i data-lucide="loader" class="spin"></i> Loading...</div>
                 </div>
             </section>
         </div>
@@ -195,7 +213,7 @@
                         if (j.budget_id && editLink && deleteLink) {
                             editLink.href = `/monthly_budget/edit/${j.budget_id}`;
                             deleteLink.href = `/monthly_budget/delete/${j.budget_id}`;
-                            if (actionsDiv) actionsDiv.style.display = 'block';
+                            if (actionsDiv) actionsDiv.style.display = 'flex';
                         } else if (editLink && deleteLink) {
                             const getUrl = `/monthly_budget/get/${m}/${y}?_=${Date.now()}`;
                             try {
@@ -205,7 +223,7 @@
                                     if (j2.budget_id) {
                                         editLink.href = `/monthly_budget/edit/${j2.budget_id}`;
                                         deleteLink.href = `/monthly_budget/delete/${j2.budget_id}`;
-                                        if (actionsDiv) actionsDiv.style.display = 'block';
+                                        if (actionsDiv) actionsDiv.style.display = 'flex';
                                     }
                                 }
                             } catch (e2) {
@@ -458,7 +476,34 @@
                                     x: { display: true, title: { display: true, text: 'Day' } },
                                     y: { display: true, title: { display: true, text: 'Amount ($)' }, beginAtZero: true }
                                 },
-                                plugins: { legend: { display: false }, tooltip: { enabled: true } }
+                                plugins: { 
+                                    legend: { display: false }, 
+                                    tooltip: { 
+                                        enabled: true,
+                                        callbacks: {
+                                            label: function(context) {
+                                                let label = context.dataset.label || '';
+                                                if (label) {
+                                                    label += ': ';
+                                                }
+                                                if (context.parsed.y !== null) {
+                                                    label += '$' + context.parsed.y.toFixed(2);
+                                                }
+                                                return label;
+                                            }
+                                        }
+                                    } 
+                                },
+                                onClick: (event, activeElements) => {
+                                    if (activeElements && activeElements.length > 0) {
+                                        const dataIndex = activeElements[0].index;
+                                        const clickedDate = days[dataIndex].date; // YYYY-MM-DD format
+                                        // Extract year-month for the ym parameter
+                                        const ymValue = clickedDate.substring(0, 7); // Gets YYYY-MM
+                                        // Navigate to expenses page filtered by this month
+                                        window.location.href = `/expenses_list?ym=${ymValue}`;
+                                    }
+                                }
                             }
                         });
 

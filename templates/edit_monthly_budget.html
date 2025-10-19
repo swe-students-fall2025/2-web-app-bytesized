@@ -1,33 +1,33 @@
 {% extends 'base.html' %}
 
 {% block container %}
-  <h2>Edit Monthly Budget</h2>
+  <h2><i data-lucide="pencil"></i> Edit Monthly Budget</h2>
   <p>Edit the details of this monthly budget below.</p>
 
   {% if budget %}
   <form method="POST" action="{{ url_for('edit_monthly_budget', budget_id=budget._id) }}">
     <div>
-      <label>Budget ($): *</label>
-      <input type="number" name="budget" step="0.01" min="0" required value="{{ budget.budget }}" />
+      <label><i data-lucide="dollar-sign"></i> Budget ($): *</label>
+      <input type="number" name="budget" step="0.01" min="0" required value="{{ '%.2f' | format(budget.budget) }}" />
     </div>
 
     <div>
-      <label>Month (1-12): *</label>
+      <label><i data-lucide="calendar"></i> Month (1-12): *</label>
       <input type="number" name="month" min="1" max="12" required value="{{ budget.month }}" />
     </div>
 
     <div>
-      <label>Year: *</label>
+      <label><i data-lucide="calendar"></i> Year: *</label>
       <input type="number" name="year" min="2000" max="2100" required value="{{ budget.year }}" />
     </div>
 
     <div>
-      <label>Notes:</label>
+      <label><i data-lucide="file-text"></i> Notes:</label>
       <textarea name="notes">{{ budget.notes }}</textarea>
     </div>
 
     <div style="margin-top:12px;">
-      <a href="{{ url_for('home') }}">Cancel</a>
+      <a href="{{ url_for('home') }}"><i data-lucide="x"></i> Cancel</a>
       <input type="submit" value="Save Changes" />
     </div>
   </form>
