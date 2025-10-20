@@ -2,7 +2,7 @@
 
 {% block container %}
 
-    <h2><i data-lucide="wallet"></i> Welcome to Your Budget Tracker!</h2>
+    <h2><i data-lucide="wallet"></i> Welcome to Your Budget Buddy!</h2>
     <p>Empower users to plan and track spending on mobile quickly and clearly!</p>
 
     <!---Monthly Budget Overview-->
@@ -13,8 +13,9 @@
             <div id="monthlyBudgetCard" class="card" style="position:relative; width:100%;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: var(--space-md);">
                     <div style="display:flex; gap:8px; align-items:center; flex-wrap: wrap;">
-                        <button id="mb-prev" aria-label="Previous month"><i data-lucide="chevron-left"></i> Prev</button>
-                        <input type="month" id="mb-select-month" aria-label="Select month" style="height: 2.5rem; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); font-size: 0.875rem; font-family: inherit; cursor: pointer;" />
+                        <button id="mb-prev" class="btn" aria-label="Previous month"><i data-lucide="chevron-left"></i> Prev</button>
+                        <input list="mb-months" id="mb-select-month" aria-label="Select month" placeholder="e.g. Oct 2025" style="height: 2.5rem; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); font-size: 0.875rem; font-family: inherit; cursor: text;" />
+                        <datalist id="mb-months"></datalist>
                         <button id="mb-next" aria-label="Next month">Next <i data-lucide="chevron-right"></i></button>
                         <p id="mb-monthyear" style="margin:0; font-weight:600; color:var(--text);"></p>
                     </div>
@@ -39,26 +40,45 @@
                             <div style="font-size: 0.875rem; color: var(--muted-text); margin-bottom: var(--space-xs);">
                                 <i data-lucide="piggy-bank"></i> Remaining
                             </div>
-                            <div style="font-size: 1.75rem; font-weight: 700; color: var(--accent);">$<span id="mb-remaining">0.00</span></div>
+                            <div class="mb-remaining-value" style="font-size: 1.75rem; font-weight: 700;">$<span id="mb-remaining">0.00</span></div>
                         </div>
                     </div>
                     
                     <div id="mb-actions" style="display:flex; gap: var(--space-sm); padding-top: var(--space-md); border-top: 1px solid var(--divider); justify-content: flex-end;">
+                        <a id="mb-view-link" href="#" style="display:none;" target="_blank" rel="noopener noreferrer">
+                                <button id="mb-view-btn" class="btn btn-icon btn-ghost" aria-label="View expenses for month" title="Open expenses for this month in a new tab"><i data-lucide="banknote"></i></button>
+                        </a>
+                        <!-- Note button: visible only when a monthly budget exists; opens modal showing the budget notes -->
+                        <button id="mb-note-btn" class="btn btn-icon btn-ghost" aria-label="Show monthly budget note" title="Show monthly budget note" style="display:none;"><i data-lucide="file-text"></i></button>
                         <a id="mb-edit-link" href="#">
-                            <button id="mb-edit-btn" class="btn-icon btn-ghost" aria-label="Edit monthly budget"><i data-lucide="pencil"></i></button>
+                            <button id="mb-edit-btn" class="btn btn-icon btn-ghost" aria-label="Edit monthly budget"><i data-lucide="pencil"></i></button>
                         </a>
                         <a id="mb-delete-link" href="#" onclick="return confirm('Are you sure you want to delete this monthly budget?');">
-                            <button id="mb-delete-btn" class="btn-icon btn-ghost" aria-label="Delete monthly budget" style="color: var(--danger);"><i data-lucide="trash-2"></i></button>
+                            <button id="mb-delete-btn" class="btn btn-icon btn-ghost" aria-label="Delete monthly budget" style="color: var(--danger);"><i data-lucide="trash-2"></i></button>
                         </a>
                     </div>
                 </div>
 
                 <div id="mb-no-budget" style="display:none; text-align:center; padding:20px 0;">
                     <p id="mb-no-budget-text" style="color:#666; margin-bottom:12px;">No monthly budget set for <span id="mb-no-monthyear"></span>.</p>
-                    <a id="mb-add-link" href="{{ url_for('add_monthly_budget') }}"><button><i data-lucide="plus-circle"></i> New Monthly Budget</button></a>
+                    <a id="mb-add-link" class="btn btn-primary" href="{{ url_for('add_monthly_budget') }}"><i data-lucide="plus-circle"></i> New Monthly Budget</a>
                 </div>
             </div>
         </section>
+
+        <!-- Monthly Budget Note Modal -->
+        <div id="mb-note-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="mb-note-title" style="display:none; position:fixed; inset:0; z-index:1000;">
+            <div class="modal-backdrop" id="mb-note-backdrop" tabindex="-1" style="position:fixed; inset:0; background: rgba(0,0,0,0.36);"></div>
+            <div class="modal-panel" role="document" style="max-width:640px; margin: 6vh auto; background: var(--card-bg); padding: var(--space-lg); border-radius: var(--radius); box-shadow: var(--shadow-lg); position:relative; z-index:1001;">
+                <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom: var(--space-md);">
+                    <h3 id="mb-note-title" style="margin:0; font-size:1.125rem;"><i data-lucide="file-text"></i> Monthly Budget Note</h3>
+                    <button id="mb-note-close" class="btn btn-icon btn-ghost" aria-label="Close note modal"><i data-lucide="x"></i></button>
+                </header>
+                <div id="mb-note-body" style="min-height:72px; color:var(--text);">
+                    <p id="mb-note-content" style="white-space:pre-wrap; color:var(--muted-text);">Loading...</p>
+                </div>
+            </div>
+        </div>
 
         <div class="cards-row">
             <!-- Category breakdown pie chart card -->
@@ -125,6 +145,7 @@
                 const editLink = document.getElementById('mb-edit-link');
                 const deleteLink = document.getElementById('mb-delete-link');
                 const actionsDiv = document.getElementById('mb-actions');
+                const mbNoteBtn = document.getElementById('mb-note-btn');
 
                 // month picker element
                 const monthPicker = document.getElementById('mb-select-month');
@@ -136,11 +157,33 @@
                 // Chart.js instance for trend line
                 let trendChart = null;
 
-                // set max for monthPicker to current month to disable future months in browser UI
+                // replace native month picker with autocomplete list - populate datalist with recent months
                 if (monthPicker) {
                     const nowForMax = new Date();
-                    const maxVal = `${nowForMax.getFullYear()}-${String(nowForMax.getMonth()+1).padStart(2,'0')}`;
-                    monthPicker.setAttribute('max', maxVal);
+                    const maxYear = nowForMax.getFullYear();
+                    const maxMonth = nowForMax.getMonth() + 1;
+                    // generate last 24 months options
+                    const months = [];
+                    for (let i = 0; i < 24; i++) {
+                        const d = new Date(nowForMax.getFullYear(), nowForMax.getMonth() - i, 1);
+                        const y = d.getFullYear();
+                        const m = d.getMonth() + 1;
+                        const iso = `${String(y).padStart(4,'0')}-${String(m).padStart(2,'0')}`;
+                        const label = `${monthNames[m-1]} ${y}`;
+                        months.push({iso, label});
+                    }
+                    const dataList = document.getElementById('mb-months');
+                    if (dataList) {
+                        dataList.innerHTML = '';
+                        months.forEach(o => {
+                            const opt = document.createElement('option');
+                            opt.value = o.iso; // keep value as YYYY-MM for compatibility
+                            opt.textContent = o.label;
+                            dataList.appendChild(opt);
+                        });
+                    }
+                    // if a saved value exists, use it; otherwise set to current
+                    if (!monthPicker.value) monthPicker.value = formatMonthPickerValue(year, month);
                 }
 
                 function setAddLink(m, y){
@@ -179,18 +222,22 @@
                     try {
                         const res = await fetch(url);
                         if (!res.ok) {
-                            loading.style.display = 'none';
-                            nobudget.style.display = 'block';
-                            if (actionsDiv) actionsDiv.style.display = 'none';
+                        loading.style.display = 'none';
+                        nobudget.style.display = 'block';
+                        if (actionsDiv) actionsDiv.style.display = 'none';
+                        try { window.__mb_show_note_button && window.__mb_show_note_button(false); } catch(e){}
+                        if (mbNoteBtn) mbNoteBtn.style.display = 'none';
                             return;
                         }
 
                         const j = await res.json();
                         const budget = j.budget ?? null;
                         if (budget === null) {
-                            loading.style.display = 'none';
-                            nobudget.style.display = 'block';
-                            if (actionsDiv) actionsDiv.style.display = 'none';
+                        loading.style.display = 'none';
+                        nobudget.style.display = 'block';
+                        if (actionsDiv) actionsDiv.style.display = 'none';
+                        try { window.__mb_show_note_button && window.__mb_show_note_button(false); } catch(e){}
+                        if (mbNoteBtn) mbNoteBtn.style.display = 'none';
                             return;
                         }
 
@@ -204,16 +251,27 @@
 
                         document.getElementById('mb-budget').textContent = Number(budget).toFixed(2);
                         document.getElementById('mb-spent').textContent = Number(spent).toFixed(2);
-                        document.getElementById('mb-remaining').textContent = Number(remaining).toFixed(2);
+                        const remEl = document.getElementById('mb-remaining');
+                        remEl.textContent = Number(remaining).toFixed(2);
+                        const remContainer = remEl.parentElement || remEl;
+                        if (Number(remaining) < 0) {
+                            remContainer.classList.add('money-negative');
+                        } else {
+                            remContainer.classList.remove('money-negative');
+                        }
 
                         // try to wire up edit/delete links
+                        const viewLink = document.getElementById('mb-view-link');
                         const editLink = document.getElementById('mb-edit-link');
                         const deleteLink = document.getElementById('mb-delete-link');
                         const actionsDiv = document.getElementById('mb-actions');
                         if (j.budget_id && editLink && deleteLink) {
                             editLink.href = `/monthly_budget/edit/${j.budget_id}`;
                             deleteLink.href = `/monthly_budget/delete/${j.budget_id}`;
+                            if (viewLink) { viewLink.href = `/expenses_list?ym=${formatMonthPickerValue(y,m)}`; viewLink.style.display = 'inline-block'; }
                             if (actionsDiv) actionsDiv.style.display = 'flex';
+                            try { window.__mb_show_note_button && window.__mb_show_note_button(true); } catch(e){}
+                            if (mbNoteBtn) mbNoteBtn.style.display = 'inline-block';
                         } else if (editLink && deleteLink) {
                             const getUrl = `/monthly_budget/get/${m}/${y}?_=${Date.now()}`;
                             try {
@@ -223,7 +281,10 @@
                                     if (j2.budget_id) {
                                         editLink.href = `/monthly_budget/edit/${j2.budget_id}`;
                                         deleteLink.href = `/monthly_budget/delete/${j2.budget_id}`;
+                                        if (viewLink) { viewLink.href = `/expenses_list?ym=${formatMonthPickerValue(y,m)}`; viewLink.style.display = 'inline-block'; }
                                         if (actionsDiv) actionsDiv.style.display = 'flex';
+                                        try { window.__mb_show_note_button && window.__mb_show_note_button(true); } catch(e){}
+                                        if (mbNoteBtn) mbNoteBtn.style.display = 'inline-block';
                                     }
                                 }
                             } catch (e2) {
@@ -515,6 +576,85 @@
                         console.error('daily trend fetch error', err);
                     }
                 }
+            })();
+        </script>
+
+        <script>
+            // Note modal wiring: fetch the monthly budget notes and show modal
+            (function(){
+                const noteBtn = document.getElementById('mb-note-btn');
+                const noteModal = document.getElementById('mb-note-modal');
+                const noteBackdrop = document.getElementById('mb-note-backdrop');
+                const noteClose = document.getElementById('mb-note-close');
+                const noteContent = document.getElementById('mb-note-content');
+
+                // Helper to open modal and set content
+                function openNoteModal(text){
+                    if (!noteModal) return;
+                    noteContent.textContent = text || 'No note';
+                    noteModal.style.display = 'block';
+                    // focus close button for accessibility
+                    try { noteClose && noteClose.focus(); } catch(e){}
+                }
+
+                function closeNoteModal(){
+                    if (!noteModal) return;
+                    noteModal.style.display = 'none';
+                }
+
+                // local month names fallback (same order as the other script) for parsing the human-readable label
+                const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+                // When the main loadMonth routine detects a budget it sets j.budget_id or fetches the budget id itself.
+                // We'll listen for clicks on the note button and fetch the monthly budget document directly.
+                if (noteBtn) {
+                    noteBtn.addEventListener('click', async function(){
+                        // read current month/year from picker or current labels
+                        const picker = document.getElementById('mb-select-month');
+                        let v = picker ? picker.value : null;
+                        if (!v) {
+                            // try the visible month label
+                            const my = document.getElementById('mb-monthyear');
+                            if (my) {
+                                // attempt to parse label like 'October 2025'
+                                const parts = my.textContent.trim().split(' ');
+                                if (parts.length >= 2) {
+                                    const year = parseInt(parts.pop(), 10);
+                                    const monthName = parts.join(' ');
+                                    const monthIdx = monthNames.indexOf(monthName) + 1;
+                                    if (monthIdx > 0 && Number.isFinite(year)) v = `${String(year).padStart(4,'0')}-${String(monthIdx).padStart(2,'0')}`;
+                                }
+                            }
+                        }
+                        if (!v) { openNoteModal('No note'); return; }
+                        const [yy, mm] = v.split('-');
+                        const y = parseInt(yy, 10); const m = parseInt(mm, 10);
+                        if (!Number.isFinite(y) || !Number.isFinite(m)) { openNoteModal('No note'); return; }
+
+                        const url = `/monthly_budget/get/${m}/${y}?_=${Date.now()}`;
+                        try {
+                            const res = await fetch(url);
+                            if (!res.ok) {
+                                openNoteModal('No note');
+                                return;
+                            }
+                            const j = await res.json();
+                            const note = j.notes || j.note || '';
+                            openNoteModal(note || 'No note');
+                        } catch (e) {
+                            console.error('failed to fetch monthly budget note', e);
+                            openNoteModal('No note');
+                        }
+                    });
+                }
+
+                // close handlers
+                noteClose && noteClose.addEventListener('click', closeNoteModal);
+                noteBackdrop && noteBackdrop.addEventListener('click', closeNoteModal);
+                document.addEventListener('keydown', function(ev){ if (ev.key === 'Escape') closeNoteModal(); });
+
+                // Expose a small helper so loadMonth can show the note button when budget exists
+                window.__mb_show_note_button = function(show){ if (noteBtn) noteBtn.style.display = show ? 'inline-block' : 'none'; };
             })();
         </script>
 

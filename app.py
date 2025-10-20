@@ -194,6 +194,9 @@ def create_app():
         q = request.args.get("q", "").strip()
         category = request.args.get("category", "").strip()
         ym = request.args.get("ym", "").strip()
+        date_str = request.args.get("date", "").strip()
+        year_q = request.args.get("year", "").strip()
+        month_q = request.args.get("month", "").strip()
         page = _parse_int_or_none(request.args.get("page")) or 1
         per_page = 10  # Customize how many expenses per page
 
@@ -210,18 +213,37 @@ def create_app():
         if category:
             query["category"] = {"$regex": category, "$options": "i"}
 
-        # Handle year-month (ym) filter
-        if ym:
-           
+        # Handle exact date filter (YYYY-MM-DD)
+        if date_str:
+            try:
+                dparts = date_str.split("-")
+                if len(dparts) == 3:
+                    y = int(dparts[0])
+                    m = int(dparts[1])
+                    day = int(dparts[2])
+                    query["year"] = y
+                    query["month"] = m
+                    query["day"] = day
+            except Exception:
+                flash("Invalid date format for date. Use YYYY-MM-DD.", "warning")
+        # Handle separate year/month query params (year only or year+month)
+        elif year_q:
+            y = _parse_int_or_none(year_q)
+            m = _parse_int_or_none(month_q)
+            if y:
+                query["year"] = int(y)
+                if m:
+                    query["month"] = int(m)
+        # Fallback: handle year-month (ym) filter for backward compatibility
+        elif ym:
+            try:
                 y, m = ym.split("-")
                 year = int(y)
                 month = int(m)
                 query["year"] = year
                 query["month"] = month
-                """
             except ValueError:
                 flash("Invalid date format for ym. Use YYYY-MM.", "warning")
-                """
 
         # Get total count
         total_expenses = db.expenses.count_documents(query)
@@ -233,14 +255,21 @@ def create_app():
             .skip((page - 1) * per_page)\
             .limit(per_page)
 
+        # pass back parsed query params so the template can prefill controls
+        import datetime as _dt
+        current_year = _dt.datetime.utcnow().year
         return render_template(
             "expenses.html",
             expenses=expenses,
             q=q,
             category=category,
             ym=ym,
+            date=date_str,
+            year=year_q,
+            month=month_q,
             page=page,
-            total_pages=total_pages
+            total_pages=total_pages,
+            current_year=current_year
         )
     @app.route("/expense_new", methods=["GET"])
     def expense_new():

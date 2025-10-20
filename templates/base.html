@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Budget Tracker App</title>
+    <title>Budget Buddy App</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='global2.css') }}" />
     <!-- Lucide Icons -->
@@ -10,7 +10,7 @@
   <body>
     <div class="container">
       <header style="margin-bottom: var(--space-xl);">
-        <h1><i data-lucide="wallet"></i> Budget Tracker</h1>
+        <h1><i data-lucide="wallet"></i> Budget Buddy</h1>
         <nav>
           <a href="{{ url_for('home')}}"><i data-lucide="home"></i> Home</a>
           <a href="{{ url_for('expenses_list')}}"><i data-lucide="receipt"></i> Expenses</a>
@@ -45,7 +45,7 @@
           color: #666;
         "
       >
-        <p>&copy; 2025 Budget Tracker. All rights reserved.</p>
+        <p>&copy; 2025 Budget Buddy. All rights reserved.</p>
       </footer>
     </div>
     

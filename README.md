@@ -1,4 +1,4 @@
-# Budget Tracker
+# Budget Buddy
 
 ## Team Members
 
@@ -10,7 +10,7 @@
 
 ## Product vision statement
 
-Our app empowers users to plan and track spending on mobile quickly and clearly by showing **planned vs. actual** amounts per category, so they can make smarter day-to-day money decisions.
+Our app **Budget Buddy**, empowers users to plan and track spending on mobile quickly and clearly by showing **planned vs. actual** amounts per category, so they can make smarter day-to-day money decisions.
 
 ## User stories
 
@@ -138,7 +138,6 @@ FLASK_APP=app.py
 FLASK_ENV=development
 FLASK_PORT=5000
 
-
 > ⚠️ The `.env` file must **not** be pushed to GitHub, as it contains private credentials.  
 > Only commit `env.example` with dummy values.
 > if you use a database, you should change the URI to 
@@ -173,11 +172,7 @@ If you also want to remove MongoDB data volumes (for a clean reset):
 
 ---
 
-
-
-
 ## Task boards
 
 - [Sprint 1 Board](https://github.com/orgs/swe-students-fall2025/projects/7/views/1)
 - [Sprint 2 Board](https://github.com/orgs/swe-students-fall2025/projects/20/views/1)
-
