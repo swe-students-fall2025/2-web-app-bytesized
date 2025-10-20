@@ -3,10 +3,30 @@ import datetime
 import pymongo
 from bson.objectid import ObjectId
 from dotenv import load_dotenv, dotenv_values
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
+from werkzeug.security import generate_password_hash, check_password_hash
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+from functools import wraps
+
 
 # load environment variables from .env file
 load_dotenv()
+
+# -------------------
+# AUTH CONFIG
+# -------------------
+MONGO_URI = os.getenv("MONGO_URI")
+DB_NAME = os.getenv("MONGO_DBNAME")
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
+
+MAIL_FROM = os.getenv("MAIL_FROM")
+SMTP_HOST = os.getenv("SMTP_HOST")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USER = os.getenv("SMTP_USER")
+SMTP_PASS = os.getenv("SMTP_PASS")
+
+serializer = URLSafeTimedSerializer(SECRET_KEY, salt="password-reset-salt")
+
 
 def create_app():
     """
@@ -25,6 +45,12 @@ def create_app():
 
     cxn = pymongo.MongoClient(os.getenv("MONGO_URI"))
     db = cxn[os.getenv("MONGO_DBNAME")]
+    users = db.users
+db.plans.create_index("created_at")
+try:
+    users.create_index("email", unique=True)
+except Exception:
+    pass
 
 
     try:
@@ -32,6 +58,11 @@ def create_app():
         print(" *", "Connected to MongoDB!")
     except Exception as e:
         print(" * MongoDB connection error:", e)
+
+
+
+
+
 
 
     # -----------------------
@@ -49,6 +80,20 @@ def create_app():
         except Exception:
             return None
 
+    def current_user():
+        if "user_email" in session:
+            return users.find_one({"email": session["user_email"]})
+        return None
+
+    def login_required(view):
+        @wraps(view)
+        def wrapped(*args, **kwargs):
+            if not current_user():
+                flash("Please sign in first.", "warning")
+                return redirect(url_for("signin"))
+            return view(*args, **kwargs)
+        return wrapped
+
     def _parse_float_positive(s):
         try:
             v = float(s)
@@ -62,6 +107,7 @@ def create_app():
     # HOME
     # -----------------------
     @app.route("/")
+    @login_required
     def home():
         """
         Route for the home page.
@@ -75,6 +121,7 @@ def create_app():
     # PLAN
     # -----------------------
     @app.route("/create", methods=["POST"])
+    @login_required
     def create_plan():
         """
         Route for POST requests to the create page.
@@ -108,6 +155,7 @@ def create_app():
         return redirect(url_for("home"))
 
     @app.route("/edit/<plan_id>")
+    @login_required
     def edit(plan_id):
         """
         Route for GET requests to the edit page.
@@ -121,6 +169,7 @@ def create_app():
         return render_template("edit_plan.html", doc=doc)
 
     @app.route("/edit/<plan_id>", methods=["POST"])
+    @login_required
     def edit_plan(plan_id):
         """
         Route for POST requests to the edit page.
@@ -157,6 +206,7 @@ def create_app():
         return redirect(url_for("home"))
 
     @app.route("/delete/<plan_id>")
+    @login_required
     def delete(plan_id):
         """
         Route for GET requests to the delete page.
@@ -170,6 +220,7 @@ def create_app():
         return redirect(url_for("home"))
 
     @app.route("/search")
+    @login_required
     def search():
         """
         Route for GET requests to the search page.
@@ -187,6 +238,7 @@ def create_app():
     
 
     @app.route("/expenses_list")
+    @login_required
     def expenses_list():
         """
         List expenses with optional filters: search (q), category, year+month (ym), and pagination (page).
@@ -272,6 +324,7 @@ def create_app():
             current_year=current_year
         )
     @app.route("/expense_new", methods=["GET"])
+    @login_required
     def expense_new():
         """
         Display the form to add a new expense.
@@ -281,6 +334,7 @@ def create_app():
       
 
     @app.route("/expense_create", methods=["POST"])
+    @login_required
     def expense_create():
         """
         Handle the form submission to create a new expense.
@@ -321,6 +375,7 @@ def create_app():
         """
 
     @app.route("/expense/edit/<expense_id>", methods=["GET", "POST"])
+    @login_required
     def expense_edit(expense_id):
         from bson.objectid import ObjectId
         
@@ -347,6 +402,7 @@ def create_app():
         expense = db.expenses.find_one({"_id": ObjectId(expense_id)})
         return render_template("expense_edit.html", expense=expense)
     @app.route("/expense/update/<expense_id>", methods=["POST"])
+    @login_required
     def expense_update(expense_id):
         from bson.objectid import ObjectId
         from datetime import datetime
@@ -368,6 +424,7 @@ def create_app():
         )
         return redirect(url_for("expenses_list"))
     @app.route("/expense/delete/<expense_id>",methods=["GET", "POST"])
+    @login_required
     def expense_delete(expense_id):
         """
         Delete an expense and redirect to expenses list.
@@ -381,6 +438,7 @@ def create_app():
     # Monthly Budget
     # -----------------------
     @app.route("/monthly_budget/add", methods=["GET", "POST"])
+    @login_required
     def add_monthly_budget():
         """
         GET: show form (if template exists)
@@ -425,6 +483,7 @@ def create_app():
 
 
     @app.route("/monthly_budget/edit/<budget_id>", methods=["GET", "POST"])
+    @login_required
     def edit_monthly_budget(budget_id):
         """
         GET: render edit form
@@ -469,6 +528,7 @@ def create_app():
 
 
     @app.route("/monthly_budget/delete/<budget_id>")
+    @login_required
     def delete_monthly_budget(budget_id):
         """
         Delete a monthly budget (kept GET for parity).
@@ -482,6 +542,7 @@ def create_app():
         return redirect(url_for("home"))
 
     @app.route("/monthly_budget/get/<int:month>/<int:year>")
+    @login_required
     def get_monthly_budget(month, year):
         """
         Return JSON: details of the monthly budget (latest one found) + computed spent & remaining.
@@ -514,6 +575,7 @@ def create_app():
 
 
     @app.route('/settings/clear_history', methods=['POST'])
+    @login_required
     def clear_history():
         """
         Clear all monthly budgets and expenses from the database.
@@ -542,6 +604,7 @@ def create_app():
     # Finder endpoints (return JSON arrays)
     # -----------------------
     @app.route("/plans/find_by_date", methods=["GET"])
+    @login_required
     def find_by_date():
         """
         Query params supported:
@@ -575,6 +638,7 @@ def create_app():
         return jsonify(out)
     
     @app.route("/plans/find_by_month_year", methods=["GET"])
+    @login_required
     def find_by_month_year():
         """
         /plans/find_by_month_year?month=3&year=2025
@@ -591,6 +655,7 @@ def create_app():
         return jsonify(out)
     
     @app.route("/plans/find_by_year", methods=["GET"])
+    @login_required
     def find_by_year():
         """
         /plans/find_by_year?year=2025
@@ -606,6 +671,7 @@ def create_app():
         return jsonify(out)
     
     @app.route("/plans/find_by_category", methods=["GET"])
+    @login_required
     def find_by_category():
         """
         /plans/find_by_category?category=food
@@ -626,6 +692,7 @@ def create_app():
     # Budget summary
     # -----------------------
     @app.route("/budget/summary/<int:month>/<int:year>")
+    @login_required
     def budget_summary(month, year):
         """
         Returns JSON: {month, year, spent, budget(optional if exists), 
@@ -667,6 +734,7 @@ def create_app():
     # Additional APIs to list all plans
     # -----------------------
     @app.route("/api/plans", methods=["GET"])
+    @login_required
     def api_get_plans():
         cursor = db.plans.find({}).sort("created_at", -1)
         out = []
@@ -676,6 +744,7 @@ def create_app():
         return jsonify(out)
 
     @app.route("/api/budgets", methods=["GET"])
+    @login_required
     def api_get_budgets():
         cursor = db.monthly_budgets.find({}).sort([("year", -1), ("month", -1)])
         out = []
@@ -686,6 +755,7 @@ def create_app():
 
 
     @app.route("/budget/category-breakdown/<int:month>/<int:year>")
+    @login_required
     def category_breakdown(month, year):
         """
         Returns JSON: {month, year, categories: [{category, spent, count}]}
@@ -719,6 +789,7 @@ def create_app():
 
 
     @app.route("/budget/daily_totals/<int:month>/<int:year>")
+    @login_required
     def budget_daily_totals(month, year):
         """
         Returns JSON: {month, year, days: [{date: 'YYYY-MM-DD', total: float}, ...]}
@@ -758,11 +829,57 @@ def create_app():
 
 
     @app.route('/settings')
+    @login_required
     def settings():
         """
         Render a simple settings page (placeholder).
         """
         return render_template('settings.html')
+
+    @app.route("/signin", methods=["GET", "POST"])
+    def signin():
+        if request.method == "POST":
+            email = request.form.get("email", "").strip().lower()
+            password = request.form.get("password", "")
+            user = users.find_one({"email": email})
+            if user and check_password_hash(user["password_hash"], password):
+                session["user_email"] = email
+                flash("Logged in successfully.", "success")
+                return redirect(url_for("home"))
+            flash("Invalid email or password.", "danger")
+        return render_template("signin.html")
+
+    @app.route("/signup", methods=["GET", "POST"])
+    def signup():
+        if request.method == "POST":
+            email = request.form.get("email", "").strip().lower()
+            password = request.form.get("password", "")
+            confirm = request.form.get("confirm_password", "")
+            if not email or not password:
+                flash("Email and password are required.", "danger")
+            elif password != confirm:
+                flash("Passwords do not match.", "danger")
+            elif len(password) < 6:
+                flash("Password must be at least 6 characters.", "danger")
+            else:
+                try:
+                    users.insert_one({
+                        "email": email,
+                        "password_hash": generate_password_hash(password),
+                        "created_at": datetime.datetime.utcnow(),
+                    })
+                    flash("Account created! Please sign in.", "success")
+                    return redirect(url_for("signin"))
+                except Exception:
+                    flash("Email already registered.", "warning")
+                    return redirect(url_for("signin"))
+        return render_template("signup.html")
+
+    @app.route("/logout")
+    def logout():
+        session.clear()
+        flash("You are logged out.", "info")
+        return redirect(url_for("signin"))
 
 
     return app
