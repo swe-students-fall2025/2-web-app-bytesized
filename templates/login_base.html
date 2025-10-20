@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ title or 'App' }}</title>
+</head>
+<body>
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul>
+      {% for m in messages %}<li>{{ m }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  {% if session.user_email %}
+    <p>Signed in as: {{ session.user_email }} | <a href="{{ url_for('logout') }}">Logout</a></p>
+  {% endif %}
+
+  {% if content %}
+    <div>{{ content|safe }}</div>
+  {% else %}
+    {% block content %}{% endblock %}
+  {% endif %}
+</body>
+</html>
