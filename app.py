@@ -836,6 +836,51 @@ except Exception:
         """
         return render_template('settings.html')
 
+    @app.route("/signin", methods=["GET", "POST"])
+    def signin():
+        if request.method == "POST":
+            email = request.form.get("email", "").strip().lower()
+            password = request.form.get("password", "")
+            user = users.find_one({"email": email})
+            if user and check_password_hash(user["password_hash"], password):
+                session["user_email"] = email
+                flash("Logged in successfully.", "success")
+                return redirect(url_for("home"))
+            flash("Invalid email or password.", "danger")
+        return render_template("signin.html")
+
+    @app.route("/signup", methods=["GET", "POST"])
+    def signup():
+        if request.method == "POST":
+            email = request.form.get("email", "").strip().lower()
+            password = request.form.get("password", "")
+            confirm = request.form.get("confirm_password", "")
+            if not email or not password:
+                flash("Email and password are required.", "danger")
+            elif password != confirm:
+                flash("Passwords do not match.", "danger")
+            elif len(password) < 6:
+                flash("Password must be at least 6 characters.", "danger")
+            else:
+                try:
+                    users.insert_one({
+                        "email": email,
+                        "password_hash": generate_password_hash(password),
+                        "created_at": datetime.datetime.utcnow(),
+                    })
+                    flash("Account created! Please sign in.", "success")
+                    return redirect(url_for("signin"))
+                except Exception:
+                    flash("Email already registered.", "warning")
+                    return redirect(url_for("signin"))
+        return render_template("signup.html")
+
+    @app.route("/logout")
+    def logout():
+        session.clear()
+        flash("You are logged out.", "info")
+        return redirect(url_for("signin"))
+
 
     return app
 
