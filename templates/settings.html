@@ -40,6 +40,38 @@
       </div>
     </div>
   </div>
+
+  <div class="section">
+    <div class="card danger">
+      <div class="card-header">
+        <h3 class="card-title"><i data-lucide="trash-2"></i> Clear History</h3>
+      </div>
+      <div class="card-body">
+        <p class="text-muted">This will permanently remove all monthly budgets and recorded expenses from the database. This action cannot be undone.</p>
+        <button id="clearHistoryBtn" class="btn btn-danger">Clear history</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clear history confirmation modal -->
+  <div id="clearHistoryModal" class="modal" style="display:none; position:fixed; inset:0; z-index:1000;">
+    <div class="modal-backdrop" id="clearHistoryBackdrop" style="position:fixed; inset:0; background: rgba(0,0,0,0.36);"></div>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="clearHistoryTitle" style="max-width:600px; margin:6vh auto; background:var(--card-bg); padding:var(--space-lg); border-radius:var(--radius); z-index:1001;">
+      <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-md);">
+        <h3 id="clearHistoryTitle" style="margin:0;">Confirm Clear History</h3>
+        <button id="clearHistoryClose" class="btn btn-icon btn-ghost" aria-label="Close"><i data-lucide="x"></i></button>
+      </header>
+      <div style="margin-bottom:var(--space-md); color:var(--text);">
+        <p>This action will permanently delete all monthly budgets and expenses. To confirm, type <strong>DELETE</strong> in the box below and press <strong>Confirm and Clear</strong>.</p>
+      </div>
+      <form id="clearHistoryForm" method="POST" action="{{ url_for('clear_history') }}">
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:var(--space-md);">
+          <input id="clearHistoryConfirm" name="confirm" type="text" placeholder="Type DELETE to confirm" style="flex:1; padding:0.5rem; border:1px solid var(--border); border-radius:4px;" aria-label="Type DELETE to confirm">
+          <button id="clearHistorySubmit" class="btn btn-danger" type="submit" disabled>Confirm and Clear</button>
+        </div>
+      </form>
+    </div>
+  </div>
   
   <script>
     // Dark mode toggle functionality for settings page
@@ -79,6 +111,37 @@
       html.setAttribute('data-theme', newTheme);
       localStorage.setItem('theme', newTheme);
       updateThemeUI(newTheme);
+    });
+    
+    // Clear history modal logic
+    const clearBtn = document.getElementById('clearHistoryBtn');
+    const clearModal = document.getElementById('clearHistoryModal');
+    const clearBackdrop = document.getElementById('clearHistoryBackdrop');
+    const clearClose = document.getElementById('clearHistoryClose');
+    const clearInput = document.getElementById('clearHistoryConfirm');
+    const clearSubmit = document.getElementById('clearHistorySubmit');
+
+    function openClearModal(){
+      if (clearModal) clearModal.style.display = 'block';
+      try { clearInput && clearInput.focus(); } catch(e){}
+    }
+    function closeClearModal(){
+      if (clearModal) clearModal.style.display = 'none';
+      if (clearInput) { clearInput.value = ''; clearSubmit.disabled = true; }
+    }
+
+    clearBtn && clearBtn.addEventListener('click', openClearModal);
+    clearClose && clearClose.addEventListener('click', closeClearModal);
+    clearBackdrop && clearBackdrop.addEventListener('click', closeClearModal);
+    document.addEventListener('keydown', function(ev){ if (ev.key === 'Escape') closeClearModal(); });
+
+    // Enable submit only when exactly DELETE (case-sensitive) is typed
+    clearInput && clearInput.addEventListener('input', function(){
+      if (clearInput.value === 'DELETE') {
+        clearSubmit.disabled = false;
+      } else {
+        clearSubmit.disabled = true;
+      }
     });
   </script>
 {% endblock %}

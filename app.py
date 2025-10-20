@@ -513,6 +513,30 @@ def create_app():
         return jsonify(out)
 
 
+    @app.route('/settings/clear_history', methods=['POST'])
+    def clear_history():
+        """
+        Clear all monthly budgets and expenses from the database.
+        This route only accepts POST requests and requires a form confirmation.
+        The form should include a field named `confirm` with the value 'DELETE' to proceed.
+        """
+        confirm = request.form.get('confirm', '')
+        # require an explicit typed confirmation to reduce accidental deletes
+        if confirm != 'DELETE':
+            flash('Clear history aborted: confirmation text did not match.', 'warning')
+            return redirect(url_for('settings'))
+
+        try:
+            # delete all monthly budgets and expenses
+            db.monthly_budgets.delete_many({})
+            db.expenses.delete_many({})
+            flash('All monthly budgets and expenses have been cleared.', 'success')
+        except Exception as e:
+            flash(f'Failed to clear history: {str(e)}', 'danger')
+
+        return redirect(url_for('settings'))
+
+
 
     # -----------------------
     # Finder endpoints (return JSON arrays)
