@@ -20,16 +20,110 @@ container %}
     value="{{ category|default('') }}"
     style="flex: 1 1 150px; height: 2.5rem; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); font-size: 0.875rem; font-family: inherit;"
   />
-  <input 
-    type="month" 
-    name="ym" 
-    placeholder="e.g. 2025-10" 
-    value="{{ ym|default('') }}" 
-    style="flex: 1 1 150px; height: 2.5rem; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); font-size: 0.875rem; font-family: inherit; cursor: pointer;"
-  />
-  <button type="submit" style="height: 2.5rem; white-space: nowrap;"><i data-lucide="search"></i> Search</button>
-  <a href="{{ url_for('expenses_list') }}" style="height: 2.5rem; display: inline-flex; align-items: center;"><i data-lucide="x"></i> Clear</a>
+  <!-- Year / Month / Exact Date filters -->
+  <select name="year" id="filter-year" style="flex: 0 0 120px; height: 2.5rem; padding: 0 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); font-size: 0.875rem;">
+    <option value="">Year</option>
+  {# populate last 5 years + current #}
+  {% for y in range(current_year-5, current_year+1) %}
+  <option value="{{ y }}" {% if year|default('') == y|string %}selected{% endif %}>{{ y }}</option>
+  {% endfor %}
+  </select>
+
+  <select name="month" id="filter-month" style="flex: 0 0 110px; height: 2.5rem; padding: 0 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); font-size: 0.875rem;">
+    <option value="">Month</option>
+    {% for m in range(1,13) %}
+    <option value="{{ '%02d'|format(m) }}" {% if month|default('') == ('%02d'|format(m)) %}selected{% endif %}>{{ m }}</option>
+    {% endfor %}
+  </select>
+
+  <input type="date" name="date" id="filter-date" value="{{ date|default('') }}" style="flex: 0 0 160px; height: 2.5rem; padding: 0 0.5rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); font-size: 0.875rem;" />
+  <button type="submit" class="btn btn-primary" style="height: 2.5rem; white-space: nowrap;"><i data-lucide="search"></i> Search</button>
+  <a id="clear-link" class="btn btn-ghost" href="{{ url_for('expenses_list') }}" style="height: 2.5rem; display: inline-flex; align-items: center;"><i data-lucide="x"></i> Clear</a>
 </form>
+
+<script>
+  // Helper: update clear URL by removing filter params
+  (function(){
+    const clearLink = document.getElementById('clear-link');
+    if(!clearLink) return;
+    const params = new URLSearchParams(window.location.search);
+    ['q','category','year','month','date'].forEach(k=> params.delete(k));
+    const qs = params.toString();
+    clearLink.setAttribute('href', '{{ url_for('expenses_list') }}' + (qs ? ('?' + qs) : ''));
+  })();
+
+  // UX: disable month/date controls unless year is selected, and auto-fill year/month when date chosen
+  (function(){
+    const yearSel = document.getElementById('filter-year');
+    const monthSel = document.getElementById('filter-month');
+    const dateInput = document.getElementById('filter-date');
+
+    if(!yearSel || !monthSel || !dateInput) return;
+
+    function updateEnabledState(){
+      if(yearSel.value){
+        monthSel.disabled = false;
+        dateInput.disabled = false;
+        monthSel.classList.remove('disabled');
+        monthSel.setAttribute('aria-disabled', 'false');
+        dateInput.setAttribute('aria-disabled', 'false');
+      } else {
+        monthSel.disabled = true;
+        dateInput.disabled = true;
+        monthSel.classList.add('disabled');
+        monthSel.setAttribute('aria-disabled', 'true');
+        dateInput.setAttribute('aria-disabled', 'true');
+      }
+    }
+
+    // On load: if a date is prefilled, parse it and set year/month
+    if(dateInput.value){
+      const parts = dateInput.value.split('-');
+      if(parts.length === 3){
+        const [y,m] = parts;
+        if(yearSel.value !== y) yearSel.value = y;
+        if(monthSel.value !== m) monthSel.value = m;
+      }
+    }
+
+    // On load: if year is prefilled (from server) enable other controls
+    updateEnabledState();
+
+    yearSel.addEventListener('change', () => {
+      const prevYear = yearSel.getAttribute('data-prev') || '';
+      updateEnabledState();
+      // if year was cleared, also clear month/date
+      if(!yearSel.value){
+        monthSel.value = '';
+        dateInput.value = '';
+      } else {
+        // if month empty, default to current month
+        if(!monthSel.value){
+          const now = new Date();
+          const curMonth = (now.getMonth() + 1).toString().padStart(2,'0');
+          monthSel.value = curMonth;
+        }
+      }
+      yearSel.setAttribute('data-prev', yearSel.value);
+    });
+
+    dateInput.addEventListener('change', () => {
+      if(!dateInput.value) return;
+      const parts = dateInput.value.split('-');
+      if(parts.length === 3){
+        const [y,m] = parts;
+        if(yearSel.value !== y) yearSel.value = y;
+        if(monthSel.value !== m) monthSel.value = m;
+        updateEnabledState();
+      }
+    });
+
+    // Make month appear visually disabled when disabled (small helper)
+    const style = document.createElement('style');
+    style.textContent = '.disabled { opacity: 0.7; }';
+    document.head.appendChild(style);
+  })();
+</script>
 
 <!-- Add new expenses -->
 
@@ -49,7 +143,7 @@ container %}
       action="{{ url_for('expense_delete', expense_id=e._id) }}"
       style="display: inline"
     >
-      <button type="submit"><i data-lucide="trash-2"></i> Delete</button>
+  <button type="submit" class="btn btn-sm btn-danger"><i data-lucide="trash-2"></i> Delete</button>
     </form>
   </li>
   {% else %}
@@ -61,14 +155,14 @@ container %}
 <nav style="margin-top: 12px">
   {% if page > 1 %}
   <a
-    href="{{ url_for('expenses_list', page=page-1, q=q, category=category, ym=ym) }}"
+    href="{{ url_for('expenses_list', page=page-1, q=q, category=category, year=year, month=month, date=date) }}"
     ><i data-lucide="chevron-left"></i> Prev</a
   >
   {% endif %}
   <span> Page {{ page }} / {{ total_pages }} </span>
   {% if page < total_pages %}
   <a
-    href="{{ url_for('expenses_list', page=page+1, q=q, category=category, ym=ym) }}"
+    href="{{ url_for('expenses_list', page=page+1, q=q, category=category, year=year, month=month, date=date) }}"
     >Next <i data-lucide="chevron-right"></i></a
   >
   {% endif %}

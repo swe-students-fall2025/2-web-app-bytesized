@@ -44,7 +44,7 @@ container %}
     >
     <!-- Change doc to expense -->
   </div>
-  <button type="submit"><i data-lucide="save"></i> Update</button>
-  <a href="{{ url_for('expenses_list') }}"><i data-lucide="x"></i> Cancel</a>
+  <button type="submit" class="btn btn-primary"><i data-lucide="save"></i> Update</button>
+  <a class="btn btn-ghost" href="{{ url_for('expenses_list') }}"><i data-lucide="x"></i> Cancel</a>
 </form>
 {% endblock %}

@@ -1,4 +1,4 @@
-# Budget Tracker - AI Agent Instructions
+# Budget Buddy - AI Agent Instructions
 
 ## Architecture Overview
 **Single-file Flask app** (`app.py`) with MongoDB backend. No package structure—all routes, DB logic, and helpers live in one file. Templates use Jinja2, extending `templates/base.html` which provides navigation and flash message rendering.
