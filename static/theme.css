@@ -743,6 +743,51 @@ hr {
   display: inline-block;
 }
 
+/* ===== Modal (global) ===== */
+.modal {
+  display: none; /* JS toggles inline display:block/none; keep hidden by default */
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.36);
+  backdrop-filter: blur(2px);
+  opacity: 1;
+  transition: opacity 0.18s ease-in-out;
+}
+
+.modal-panel {
+  max-width: 640px;
+  width: calc(100% - 2rem);
+  margin: 6vh auto;
+  background: var(--card-bg);
+  padding: var(--space-lg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  z-index: 1001;
+  transform: translateY(10px) scale(0.995);
+  opacity: 0;
+  transition: transform 180ms cubic-bezier(.2,.9,.2,1), opacity 180ms ease-in-out;
+}
+
+/* When shown (JS sets display:block), animate panel in by setting a helper class on the modal if desired. */
+.modal.show .modal-panel,
+.modal[aria-hidden="false"] .modal-panel,
+.modal[style*="display:block"] .modal-panel {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.modal-panel:focus { outline: none; }
+
+
 /* ===== Mobile Responsive ===== */
 @media (max-width: 768px) {
   html { font-size: 15px; }
