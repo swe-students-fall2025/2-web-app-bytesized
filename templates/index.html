@@ -592,18 +592,29 @@
                 function openNoteModal(text){
                     if (!noteModal) return;
                     noteContent.textContent = text || 'No note';
-                    noteModal.style.display = 'block';
+                    // use flex to center the panel (CSS modal uses flexbox)
+                    noteModal.style.display = 'flex';
+                    noteModal.classList.add('show');
+                    noteModal.setAttribute('aria-hidden', 'false');
                     // focus close button for accessibility
                     try { noteClose && noteClose.focus(); } catch(e){}
                 }
 
                 function closeNoteModal(){
                     if (!noteModal) return;
+                    noteModal.classList.remove('show');
                     noteModal.style.display = 'none';
+                    noteModal.setAttribute('aria-hidden', 'true');
                 }
 
                 // local month names fallback (same order as the other script) for parsing the human-readable label
                 const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+                // Ensure modal is hidden on initial load
+                if (noteModal) {
+                    noteModal.style.display = 'none';
+                    noteModal.setAttribute('aria-hidden', 'true');
+                }
 
                 // When the main loadMonth routine detects a budget it sets j.budget_id or fetches the budget id itself.
                 // We'll listen for clicks on the note button and fetch the monthly budget document directly.

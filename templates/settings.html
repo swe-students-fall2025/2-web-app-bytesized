@@ -122,13 +122,22 @@
     const clearSubmit = document.getElementById('clearHistorySubmit');
 
     function openClearModal(){
-      if (clearModal) clearModal.style.display = 'block';
+      if (!clearModal) return;
+      clearModal.style.display = 'flex';
+      clearModal.classList.add('show');
+      clearModal.setAttribute('aria-hidden', 'false');
       try { clearInput && clearInput.focus(); } catch(e){}
     }
     function closeClearModal(){
-      if (clearModal) clearModal.style.display = 'none';
+      if (!clearModal) return;
+      clearModal.classList.remove('show');
+      clearModal.style.display = 'none';
+      clearModal.setAttribute('aria-hidden', 'true');
       if (clearInput) { clearInput.value = ''; clearSubmit.disabled = true; }
     }
+
+    // hide modal by default for accessibility
+    if (clearModal) { clearModal.style.display = 'none'; clearModal.setAttribute('aria-hidden','true'); }
 
     clearBtn && clearBtn.addEventListener('click', openClearModal);
     clearClose && clearClose.addEventListener('click', closeClearModal);
