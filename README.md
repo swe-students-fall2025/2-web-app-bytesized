@@ -156,7 +156,7 @@ If you encounter a “port already in use” error, stop any previous containers
 then rerun the previous command.
 
 Once it builds successfully, open a web browser and go to:  
-`http://localhost:5000`
+`http://localhost:5002`
 
 You should see the running Flask web app connected to MongoDB.
 
